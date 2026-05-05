@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CustomerController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -17,17 +18,15 @@ Route::get('/login', function () {
 Route::post('/login', [App\Http\Controllers\AuthController::class, 'login']);
 
 // CUSTOMER
-Route::get('/dashboard', function () {
-    return view('customer.dashboard');
-});
-
-Route::get('/menu', function () {
-    return view('customer.menu');
-});
-
-Route::get('/cart', function () {
-    return view('customer.cart');
-});
+Route::get('/dashboard', [CustomerController::class, 'dashboard']);
+Route::get('/menu', [CustomerController::class, 'menu']);
+Route::post('/cart/add', [CustomerController::class, 'addToCart']);
+Route::get('/cart', [CustomerController::class, 'cart']);
+Route::post('/cart/update', [CustomerController::class, 'updateCart']);
+Route::post('/cart/remove', [CustomerController::class, 'removeFromCart']);
+Route::get('/checkout', [CustomerController::class, 'checkout']);
+Route::post('/checkout', [CustomerController::class, 'placeOrder']);
+Route::get('/order-confirmation', [CustomerController::class, 'orderConfirmation']);
 
 // ADMIN
 Route::get('/admin', function () {

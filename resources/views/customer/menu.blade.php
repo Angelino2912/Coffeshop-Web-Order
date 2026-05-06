@@ -1,10 +1,6 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Menu Coffeeshop</title>
-</head>
-<body>
+@extends('template.main')
+
+@section('content')
 <div class="box">
     <div class="top-links">
         <a href="/dashboard">Dashboard</a>
@@ -37,5 +33,4 @@
         @endforeach
     </div>
 </div>
-</body>
-</html>
+@endsection

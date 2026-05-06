@@ -1,10 +1,6 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Pesanan Dikonfirmasi</title>
-</head>
-<body>
+@extends('template.main')
+
+@section('content')
 <div class="box">
     <a href="/dashboard">← Kembali ke Dashboard</a>
     <h1>Pesanan Berhasil Dikonfirmasi</h1>
@@ -45,5 +41,4 @@
 
     <a href="/menu" class="button">Tambah Pesanan Lain</a>
 </div>
-</body>
-</html>
+@endsection

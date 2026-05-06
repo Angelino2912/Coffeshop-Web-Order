@@ -1,10 +1,6 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Keranjang Pesanan</title>
-</head>
-<body>
+@extends('template.main')
+
+@section('content')
 <div class="box">
     <a href="/menu">← Kembali ke Menu</a>
     <h1>Keranjang Pesanan</h1>
@@ -63,5 +59,4 @@
         <a href="/checkout" class="actions">Lanjut ke Checkout</a>
     @endif
 </div>
-</body>
-</html>
+@endsection

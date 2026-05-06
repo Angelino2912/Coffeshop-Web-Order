@@ -1,10 +1,6 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Dashboard Customer</title>
-</head>
-<body>
+@extends('template.main')
+
+@section('content')
 <div class="box">
     <h1>Dashboard Customer</h1>
     <p>Selamat datang, {{ $name }}! Pilih menu terbaik untuk pesanan kamu.</p>
@@ -25,5 +21,4 @@
         </ol>
     </div>
 </div>
-</body>
-</html>
+@endsection

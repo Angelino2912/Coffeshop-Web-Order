@@ -1,10 +1,6 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Checkout Pesanan</title>
-</head>
-<body>
+@extends('template.main')
+
+@section('content')
 <div class="box">
     <a href="/cart">← Kembali ke Keranjang</a>
     <h1>Konfirmasi Pesanan</h1>
@@ -60,5 +56,4 @@
         <button type="submit">Bayar & Konfirmasi</button>
     </form>
 </div>
-</body>
-</html>
+@endsection

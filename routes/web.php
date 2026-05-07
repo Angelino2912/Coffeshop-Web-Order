@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\AuthController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -11,11 +12,17 @@ Route::get('/home', function () {
     return view('home');
 });
 
-// AUTH
+// CUSTOMER
 Route::get('/login', function () {
-    return view('auth.login');
+    return view('auth.login'); // hanya customer
 });
-Route::post('/login', [App\Http\Controllers\AuthController::class, 'login']);
+Route::post('/guest-login', [AuthController::class, 'guestLogin']);
+
+// admin
+Route::get('/admin/login', function () {
+    return view('admin.login');
+});
+Route::post('/admin/login', [AuthController::class, 'adminLogin']);
 
 // CUSTOMER
 Route::get('/dashboard', [CustomerController::class, 'dashboard']);

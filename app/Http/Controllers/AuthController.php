@@ -10,31 +10,38 @@ use App\Models\Customer;
 
 class AuthController extends Controller
 {
-    public function login(Request $request)
+    // ADMIN LOGIN
+    public function adminLogin(Request $request)
     {
-        $email = $request->email;
-        $password = $request->password;
+        $admin = Admin::where('email', $request->email)->first();
 
-        // CEK ADMIN
-        $admin = Admin::where('email', $email)->first();
-
-        if ($admin && $password == $admin->password) {
+        if ($admin && Hash::check($request->password, $admin->password)) {
             Session::put('user', $admin);
             Session::put('role', 'admin');
 
             return redirect('/admin');
         }
 
-        // CEK CUSTOMER
-        $customer = Customer::where('email', $email)->first();
+        return back()->with('error', 'Login admin gagal');
+    }
 
-        if ($customer && Hash::check($password, $customer->password)) {
-            Session::put('user', $customer);
-            Session::put('role', 'customer');
 
-            return redirect('/dashboard');
-        }
+    // CUSTOMER (GUEST)
+    public function guestLogin(Request $request)
+    {
+        $request->validate([
+            'nama' => 'required',
+            'no_meja' => 'required'
+        ]);
 
-        return back()->with('error', 'Login gagal');
+        $customer = Customer::create([
+            'nama' => $request->nama,
+            'no_meja' => $request->no_meja
+        ]);
+
+        Session::put('user', $customer);
+        Session::put('role', 'customer');
+
+        return redirect('/dashboard');
     }
 }

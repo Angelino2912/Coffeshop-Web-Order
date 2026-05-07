@@ -1,43 +1,41 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login Cafe</title>
-    <!-- <link rel="icon" href="public\favicon.ico" type="image/x-icon"> -->
-    <!-- CSS -->
-    <link rel="stylesheet" href="{{ asset('style/login.css') }}">
-    <!-- Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <title>Login Customer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="{{ asset('style/customers/login.css') }}">
 </head>
 <body>
 
-<div class="container">
+<div class="login-container">
 
-    <!-- Kanan (Form Login) -->
-    <div class="right">
-        <h1>Welcome, Please login to your account!</h1>
+    <!-- LEFT (Branding) -->
+    <div class="login-left">
+        <h1>Café Cinta Rasa</h1>
+        <p>Order makanan langsung dari meja kamu 🍵</p>
+    </div>
 
-        <form action="/login" method="POST">
+    <!-- RIGHT (Form) -->
+    <div class="login-right">
+        <h2>Masuk Pelanggan</h2>
+
+        @if($errors->any())
+            <div class="error">
+                {{ $errors->first() }}
+            </div>
+        @endif
+
+        <form action="/guest-login" method="POST">
             @csrf
 
-            <label>Email Address</label>
-            <input type="email" name="email" placeholder="Masukkan email" required>
+            <input type="text" name="nama" placeholder="Nama Anda" required>
+            <input type="number" name="no_meja" placeholder="Nomor Meja" required>
 
-            <label>Password</label>
-            <input type="password" name="password" placeholder="Masukkan password" required>
-
-            <a href="#" class="forgot">Forgot Password?</a>
-
-            <button type="submit" class="btn-login">Sign In</button>
+            <button type="submit">Mulai Pesan</button>
         </form>
 
-        <p class="or">or</p>
-
-        <button class="google">Sign In with Google</button>
-
-        <p class="signup">
-            Don’t have an account? <a href="#">Sign Up</a>
-        </p>
     </div>
 
 </div>

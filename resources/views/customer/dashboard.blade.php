@@ -1,5 +1,9 @@
 @extends('template.main')
 
+@push('style')
+<link rel="stylesheet" href="{{ asset('style/customers/dashboard.css') }}">
+@endpush
+
 @section('content')
 <div class="box">
     <h1>Dashboard Customer</h1>

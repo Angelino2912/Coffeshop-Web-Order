@@ -115,21 +115,26 @@ class CustomerController extends Controller
         }
 
         $total = collect($cart)->reduce(fn ($total, $item) => $total + ($item['price'] * $item['quantity']), 0);
+        $customer = Session::get('user');
 
         return view('customer.checkout', [
             'cart' => $cart,
             'total' => $total,
+            'customer' => $customer,
         ]);
     }
 
     public function placeOrder(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
-            'table_number' => 'required|string|max:10',
             'note' => 'nullable|string|max:500',
         ]);
+
+        $customer = Session::get('user');
+
+        if (! $customer) {
+            return redirect('/login')->with('error', 'Silakan login ulang sebelum memasukkan pesanan.');
+        }
 
         $cart = Session::get('customer_cart', []);
 
@@ -139,11 +144,11 @@ class CustomerController extends Controller
 
         $total = collect($cart)->reduce(fn ($total, $item) => $total + ($item['price'] * $item['quantity']), 0);
 
-        // Simpan order ke database
+        // Simpan order ke database menggunakan data pelanggan dari sesi
         $order = Order::create([
-            'customer_name' => $request->name,
-            'phone' => $request->phone,
-            'table_number' => $request->table_number,
+            'customer_name' => $customer->nama ?? $customer->name ?? 'Tamu',
+            'phone' => $customer->phone ?? '',
+            'table_number' => $customer->no_meja ?? $customer->table_number ?? '-',
             'note' => $request->note,
             'total' => $total,
             'status' => 'pending',

@@ -8,7 +8,6 @@
 
     <div class="summary">
         <div class="field"><strong>Nama:</strong> {{ $order->customer_name }}</div>
-        <div class="field"><strong>Nomor HP:</strong> {{ $order->phone }}</div>
         <div class="field"><strong>Nomor Meja:</strong> {{ $order->table_number }}</div>
         <div class="field"><strong>Catatan:</strong> {{ $order->note ?: '-' }}</div>
     </div>

@@ -8,8 +8,8 @@
 <div class="dashboard-container">
     <div class="dashboard-header">
         <div class="welcome-card">
-            <h1>Dashboard Customer</h1>
-            <p>Selamat datang, {{ $name }}! Pesanan selanjutnya bisa langsung dilanjutkan dari halaman ini.</p>
+            <h1>Selamat datang, {{ $name }}!</h1>
+            <p class="p">Pesanan selanjutnya bisa langsung dilanjutkan dari halaman ini.</p>
         </div>
         <div class="info-card">
             <h3>Informasi Login</h3>

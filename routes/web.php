@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
+use Illuminate\Support\Facades\Session;
 
 // Route::get('/', function () {
 //     return view('welcome');
@@ -27,7 +28,13 @@ Route::post('/admin/login', [AuthController::class, 'adminLogin']);
 Route::get('/admin/dashboard', [AdminController::class, 'dashboard']);
 
 // CUSTOMER
-Route::get('/dashboard', [CustomerController::class, 'dashboard']);
+Route::get('/dashboard', function () {
+
+    $user = Session::get('user');
+
+    return view('customer.dashboard', compact('user'));
+});
+
 Route::get('/menu', [CustomerController::class, 'menu']);
 Route::post('/cart/add', [CustomerController::class, 'addToCart']);
 Route::get('/cart', [CustomerController::class, 'cart']);

@@ -5,34 +5,58 @@
 @endpush
 
 @section('content')
-<div class="dashboard-container">
-    <div class="dashboard-header">
+<div class="dashboard-layout">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+        <div class="logo">
+            <h2>Cafe</h2>
+            <p>Cinta Rasa</p>
+        </div>
+
+        <div class="menu-list">
+
+            <a href="/menu" class="menu-item">
+                Lihat Menu
+            </a>
+
+            <a href="/cart" class="menu-item">
+                Lihat Keranjang
+            </a>
+
+            <a href="/checkout" class="menu-item">
+                Konfirmasi Pesanan
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- CONTENT -->
+    <div class="main-content">
+
         <div class="welcome-card">
-            <h1>Selamat datang, {{ $name }}!</h1>
-            <p class="p">Pesanan selanjutnya bisa langsung dilanjutkan dari halaman ini.</p>
-        </div>
-        <div class="info-card">
-            <h3>Informasi Login</h3>
-            <p>Nama dan nomor meja diambil dari login awal, jadi kamu tidak perlu mengisi ulang lagi saat checkout.</p>
-        </div>
-    </div>
+            <h1>Selamat Datang, {{ $user->nama }}!</h1>
 
-    <div class="actions">
-        <a href="/menu" class="button">Lihat Menu Makanan & Minuman</a>
-        <a href="/cart" class="button secondary">Lihat Keranjang</a>
-        <a href="/checkout" class="button secondary">Konfirmasi Pesanan</a>
-    </div>
+            <p>
+                Pesanan selanjutnya bisa langsung dilanjutkan
+                dari halaman ini.
+            </p>
+        </div>
 
-    <div class="content">
         <div class="box">
-            <h3>Cara Pesan</h3>
+            <h2>Cara Pesan</h2>
+
             <ol>
-                <li>Pilih menu dari halaman <strong>Menu</strong>.</li>
+                <li>Pilih menu dari halaman Menu.</li>
                 <li>Tambahkan item ke keranjang.</li>
-                <li>Periksa keranjang dan lanjutkan ke checkout.</li>
-                <li>Tambahkan catatan jika perlu, lalu konfirmasi.</li>
+                <li>Periksa keranjang dan checkout.</li>
+                <li>Tambahkan catatan lalu konfirmasi.</li>
             </ol>
         </div>
+
     </div>
+
 </div>
 @endsection

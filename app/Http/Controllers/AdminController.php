@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
-
+use Illuminate\Http\Request;
 class AdminController extends Controller
 {
     public function orders()
@@ -18,4 +18,19 @@ class AdminController extends Controller
     {
         return view('admin.dashboard');
     }
+
+    public function updateStatus(Request $request, $id)
+    {
+        $order = Order::findOrFail($id);
+
+        $order->status = $request->status;
+
+        $order->save();
+
+        return back()->with(
+            'success',
+            'Status pesanan berhasil diupdate'
+        );
+    }
+
 }

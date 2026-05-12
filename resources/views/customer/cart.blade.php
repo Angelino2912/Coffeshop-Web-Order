@@ -1,22 +1,26 @@
 @extends('template.main')
 
+@push('style')
+<link rel="stylesheet" href="{{ asset('style/customers/cart.css') }}">
+@endpush
+
 @section('content')
 <div class="box">
-    <a href="/menu">← Kembali ke Menu</a>
-    <h1>Keranjang Pesanan</h1>
+    <a href="/menu" style="color: #5c3a21; text-decoration: none; font-weight: 700;">← Kembali ke Menu</a>
+    <h1 style="font-size: 32px; margin: 20px 0 30px; color: #2e1f0b;">Keranjang Pesanan</h1>
 
     @if(session('success'))
-        <div class="alert success">{{ session('success') }}</div>
+        <div class="alert success" style="background: #d4edda; color: #155724; border-left: 4px solid #28a745">{{ session('success') }}</div>
     @endif
     @if(session('error'))
-        <div class="alert error">{{ session('error') }}</div>
+        <div class="alert error" style="background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545">{{ session('error') }}</div>
     @endif
 
     @if(empty($cart))
         <p>Keranjang kamu kosong. Silakan pilih menu terlebih dahulu.</p>
     @else
         <table>
-            <thead>
+            <thead style="background: #5c3a21; color: white;">
                 <tr>
                     <th>Menu</th>
                     <th>Harga</th>
@@ -27,7 +31,7 @@
             </thead>
             <tbody>
                 @foreach($cart as $item)
-                    <tr>
+                    <tr style="border-bottom: 1px solid #f0ece8">
                         <td>{{ $item['name'] }}</td>
                         <td>Rp {{ number_format($item['price'], 0, ',', '.') }}</td>
                         <td>
@@ -49,7 +53,7 @@
                     </tr>
                 @endforeach
             </tbody>
-            <tfoot>
+            <tfoot style=" background: #f7f0ea; font-size: 16px;">
                 <tr>
                     <td colspan="3"><strong>Total</strong></td>
                     <td colspan="2"><strong>Rp {{ number_format($total, 0, ',', '.') }}</strong></td>

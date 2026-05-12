@@ -16,7 +16,7 @@ body {
 .container {
     max-width: 1200px;
     margin: 0 auto;
-    background: #5c3a21(216, 43, 43, 0.95);
+    background: white;
     border-radius: 20px;
     padding: 30px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -28,12 +28,12 @@ body {
     flex-wrap: wrap;
     margin-bottom: 30px;
     padding-bottom: 20px;
-    border-bottom: 2px solid #e0e0e0;
+    border-bottom: 2px solid #000000;
 }
 
 .nav a {
     text-decoration: none;
-    color: #fff;
+    color: #000000;
     background: linear-gradient(135deg, #bb8a67 0%, #bb8a67 100%);
     padding: 12px 24px;
     border-radius: 50px;
@@ -49,11 +49,11 @@ body {
 
 
 .kelompok h2 {
-    color: #ffffff;
+    color: black;
     font-size: 2rem;
     margin-bottom: 25px;
     padding-bottom: 10px;
-    border-bottom: 3px solid #ffffff;
+    border-bottom: 3px solid #000000;
     display: inline-block;
 }
 

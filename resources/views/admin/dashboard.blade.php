@@ -28,7 +28,7 @@
             </li>
 
             <li>
-                <a href="#">
+                <a href="/admin/orders">
                     <i class="bi bi-card-list"></i>
                     Order List
                 </a>

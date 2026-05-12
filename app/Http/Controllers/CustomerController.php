@@ -147,7 +147,6 @@ class CustomerController extends Controller
         // Simpan order ke database menggunakan data pelanggan dari sesi
         $order = Order::create([
             'customer_name' => $customer->nama ?? $customer->name ?? 'Tamu',
-            'phone' => $customer->phone ?? '',
             'table_number' => $customer->no_meja ?? $customer->table_number ?? '-',
             'note' => $request->note,
             'total' => $total,
@@ -189,5 +188,21 @@ class CustomerController extends Controller
         return view('customer.order', [
             'order' => $order,
         ]);
+    }
+        public function myOrders()
+    {
+        $customer = Session::get('user');
+
+        $orders = Order::where(
+            'customer_name',
+            $customer->nama
+        )
+        ->latest()
+        ->get();
+
+        return view(
+            'customer.myorders',
+            compact('orders')
+        );
     }
 }

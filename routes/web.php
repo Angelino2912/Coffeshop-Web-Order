@@ -43,6 +43,7 @@ Route::post('/cart/remove', [CustomerController::class, 'removeFromCart']);
 Route::get('/checkout', [CustomerController::class, 'checkout']);
 Route::post('/checkout', [CustomerController::class, 'placeOrder']);
 Route::get('/order-confirmation', [CustomerController::class, 'orderConfirmation']);
+Route::get('/my-orders',[CustomerController::class, 'myOrders']);
 
 // ADMIN
 Route::get('/admin', function () {
@@ -51,3 +52,11 @@ Route::get('/admin', function () {
     }
     return view('admin.dashboard');
 });
+Route::get(
+    '/admin/orders',
+    [AdminController::class, 'orders']
+);
+Route::put(
+    '/admin/orders/{id}/status',
+    [AdminController::class, 'updateStatus']
+);

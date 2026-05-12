@@ -1,5 +1,9 @@
 @extends('template.main')
 
+@push('style')
+<link rel="stylesheet" href="{{ asset('style/customers/order.css') }}">
+@endpush
+
 @section('content')
 <div class="box">
     <a href="/dashboard">← Kembali ke Dashboard</a>
@@ -39,5 +43,6 @@
     </table>
 
     <a href="/menu" class="button">Tambah Pesanan Lain</a>
+     <a href="/my-orders" class="button secondary">Lihat Riwayat Pesanan</a>
 </div>
 @endsection

@@ -115,13 +115,19 @@ class CustomerController extends Controller
         }
 
         $total = collect($cart)->reduce(fn ($total, $item) => $total + ($item['price'] * $item['quantity']), 0);
-        $customer = Session::get('user');
+        $customerName = session('customer_name');
+        $noMeja = session('no_meja');
+
+        if (!$customerName || !$noMeja) {
+            return redirect('/login')->with('error', 'Session customer tidak ditemukan');
+        }
 
         return view('customer.checkout', [
-            'cart' => $cart,
-            'total' => $total,
-            'customer' => $customer,
-        ]);
+        'cart' => $cart,
+        'total' => $total,
+        'customerName' => $customerName,
+        'noMeja' => $noMeja,
+    ]);
     }
 
     public function placeOrder(Request $request)
@@ -130,31 +136,41 @@ class CustomerController extends Controller
             'note' => 'nullable|string|max:500',
         ]);
 
-        $customer = Session::get('user');
+        $customerName = session('customer_name');
+        $noMeja = session('no_meja');
 
-        if (! $customer) {
-            return redirect('/login')->with('error', 'Silakan login ulang sebelum memasukkan pesanan.');
+        if (!$customerName || !$noMeja) {
+            return redirect('/login')->with(
+                'error',
+                'Session customer tidak ditemukan'
+            );
         }
 
         $cart = Session::get('customer_cart', []);
 
         if (empty($cart)) {
-            return redirect('/menu')->with('error', 'Keranjang kosong. Silakan pilih menu terlebih dahulu.');
+            return redirect('/menu')->with(
+                'error',
+                'Keranjang kosong.'
+            );
         }
 
-        $total = collect($cart)->reduce(fn ($total, $item) => $total + ($item['price'] * $item['quantity']), 0);
+        $total = collect($cart)->reduce(
+            fn ($total, $item)
+                => $total + ($item['price'] * $item['quantity']),
+            0
+        );
 
-        // Simpan order ke database menggunakan data pelanggan dari sesi
         $order = Order::create([
-            'customer_name' => $customer->nama ?? $customer->name ?? 'Tamu',
-            'table_number' => $customer->no_meja ?? $customer->table_number ?? '-',
+            'customer_name' => $customerName,
+            'table_number' => $noMeja,
             'note' => $request->note,
             'total' => $total,
             'status' => 'pending',
         ]);
 
-        // Simpan order items
         foreach ($cart as $item) {
+
             OrderItem::create([
                 'order_id' => $order->id,
                 'menu_id' => $item['id'],
@@ -165,12 +181,11 @@ class CustomerController extends Controller
 
         Session::forget('customer_cart');
 
-        // Simpan order_id untuk konfirmasi
         Session::put('last_order_id', $order->id);
 
-        return redirect('/order-confirmation')->with('success', 'Pesanan berhasil dikonfirmasi. Silakan lakukan pembayaran.');
+        return redirect('/order-confirmation')
+            ->with('success', 'Pesanan berhasil dibuat');
     }
-
     public function orderConfirmation()
     {
         $orderId = Session::get('last_order_id');
@@ -189,13 +204,20 @@ class CustomerController extends Controller
             'order' => $order,
         ]);
     }
-        public function myOrders()
+    public function myOrders()
     {
-        $customer = Session::get('user');
+        $customerName = session('customer_name');
+
+        if (!$customerName) {
+            return redirect('/login')->with(
+                'error',
+                'Session customer tidak ditemukan'
+            );
+        }
 
         $orders = Order::where(
             'customer_name',
-            $customer->nama
+            $customerName
         )
         ->latest()
         ->get();

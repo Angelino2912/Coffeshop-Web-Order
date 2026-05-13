@@ -74,6 +74,71 @@
             <p>Hi Angeline, Welcome to Cinta Rasa</p>
         </div>
 
+        <div class="meja-section">
+
+        <h2>Tambah Meja</h2>
+
+        <form method="POST" action="/admin/meja/store" class="meja-form">
+            @csrf
+
+            <input
+                type="text"
+                name="no_meja"
+                placeholder="Contoh: A1"
+                required
+            >
+
+            <button type="submit">
+                Tambah Meja
+            </button>
+        </form>
+
+        <!-- GENERATE QR -->
+        <form method="POST" action="/admin/meja/generate-qr">
+            @csrf
+
+            <button type="submit" class="qr-button">
+                Generate QR Semua Meja
+            </button>
+        </form>
+
+    </div>
+
+    <!-- LIST MEJA -->
+    <div class="meja-list">
+
+        @foreach($mejas as $meja)
+
+        <div class="meja-card">
+
+            <h3>Meja {{ $meja->no_meja }}</h3>
+
+            @if($meja->qr_uuid)
+
+                <img
+                    src="{{ asset('storage/qr/meja_' . $meja->no_meja . '.svg') }}"
+                    width="150"
+                >
+
+            @else
+
+                <p>QR belum dibuat</p>
+
+            @endif
+
+            <p class="uuid-text">
+                {{ $meja->qr_uuid }}
+            </p>
+
+        </div>
+
+        @endforeach
+
+    </div>
+
+</div>
+
+
     </div>
 
 </div>

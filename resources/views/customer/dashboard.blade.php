@@ -37,8 +37,10 @@
     <div class="main-content">
 
         <div class="welcome-card">
-            <h1>Selamat Datang, {{ $user->nama }}!</h1>
-
+            <h1>
+                Selamat Datang,
+                {{ session('customer_name') }}!
+            </h1>
             <p>
                 Pesanan selanjutnya bisa langsung dilanjutkan
                 dari halaman ini.

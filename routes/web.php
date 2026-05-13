@@ -5,10 +5,11 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Session;
+use App\Http\Controllers\TableController;
 
-// Route::get('/', function () {
-//     return view('welcome');
-// });
+Route::get('/', function () {
+    return view('auth.login');
+});
 
 Route::get('/home', function () {
     return view('home');
@@ -60,3 +61,12 @@ Route::put(
     '/admin/orders/{id}/status',
     [AdminController::class, 'updateStatus']
 );
+
+Route::get('/table/{qr}', [TableController::class, 'scan']);
+Route::post('/table/confirm', [TableController::class, 'confirm']);
+Route::get('/table/end', [TableController::class, 'endSession']);
+
+
+
+Route::post('/admin/meja/generate-qr', [AdminController::class, 'generateQr']);
+Route::post('/admin/meja/store', [AdminController::class, 'storeMeja']);

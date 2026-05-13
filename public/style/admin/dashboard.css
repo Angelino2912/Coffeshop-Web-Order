@@ -114,3 +114,96 @@ body{
     color: gray;
     margin-top: 5px;
 }
+
+/* FORM MEJA */
+
+.meja-section{
+    background-color: white;
+    padding: 20px;
+    border-radius: 20px;
+    margin-top: 30px;
+    box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+}
+
+.meja-section h2{
+    margin-bottom: 20px;
+    color: #5c3517;
+}
+
+.meja-form{
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.meja-form input{
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    width: 200px;
+    outline: none;
+}
+
+.meja-form button{
+    padding: 12px 20px;
+    border: none;
+    background-color: #9b632c;
+    color: white;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.meja-form button:hover{
+    background-color: #7a4d22;
+}
+
+/* QR BUTTON */
+
+.qr-button{
+    margin-top: 20px;
+    padding: 12px 20px;
+    background-color: green;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.qr-button:hover{
+    background-color: darkgreen;
+}
+
+/* LIST MEJA */
+
+.meja-list{
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 30px;
+}
+
+.meja-card{
+    background-color: white;
+    width: 220px;
+    padding: 20px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+}
+
+.meja-card h3{
+    margin-bottom: 15px;
+    color: #5c3517;
+}
+
+.meja-card img{
+    margin-bottom: 10px;
+}
+
+.uuid-text{
+    font-size: 11px;
+    color: gray;
+    word-break: break-all;
+}

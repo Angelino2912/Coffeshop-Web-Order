@@ -5,7 +5,7 @@
 @endpush
 
 @section('content')
-
+   
 <div class="container">
 
     <div class="page-header">

@@ -2,6 +2,7 @@
 
 @push('style')
 <link rel="stylesheet" href="{{ asset('style/admin/dashboard.css') }}">
+<link rel="stylesheet" href="{{ asset('style/admin/order.css') }}">
 @endpush
 
 @section('title', 'Dashboard')
@@ -74,70 +75,124 @@
             <p>Hi Angeline, Welcome to Cinta Rasa</p>
         </div>
 
-        <div class="meja-section">
+        <div class="dashboard-grid">
 
-        <h2>Tambah Meja</h2>
+            <div class="left-panel">
 
-        <form method="POST" action="/admin/meja/store" class="meja-form">
-            @csrf
+                <div class="meja-section">
 
-            <input
-                type="text"
-                name="no_meja"
-                placeholder="Contoh: A1"
-                required
-            >
+                    <h2>Tambah Meja</h2>
 
-            <button type="submit">
-                Tambah Meja
-            </button>
-        </form>
+                    <form method="POST" action="/admin/meja/store" class="meja-form">
+                        @csrf
 
-        <!-- GENERATE QR -->
-        <form method="POST" action="/admin/meja/generate-qr">
-            @csrf
+                        <input
+                            type="text"
+                            name="no_meja"
+                            placeholder="Contoh: A1"
+                            required
+                        >
 
-            <button type="submit" class="qr-button">
-                Generate QR Semua Meja
-            </button>
-        </form>
+                        <button type="submit">
+                            Tambah Meja
+                        </button>
+                    </form>
 
-    </div>
+                    <form method="POST" action="/admin/meja/generate-qr">
+                        @csrf
 
-    <!-- LIST MEJA -->
-    <div class="meja-list">
+                        <button type="submit" class="qr-button">
+                            Generate QR Semua Meja
+                        </button>
+                    </form>
 
-        @foreach($mejas as $meja)
+                </div>
 
-        <div class="meja-card">
+                <div class="meja-list">
 
-            <h3>Meja {{ $meja->no_meja }}</h3>
+                    @foreach($mejas as $meja)
 
-            @if($meja->qr_uuid)
+                    <div class="meja-card">
 
-                <img
-                    src="{{ asset('storage/qr/meja_' . $meja->no_meja . '.svg') }}"
-                    width="150"
-                >
+                        <h3>Meja {{ $meja->no_meja }}</h3>
 
-            @else
+                        @if($meja->qr_uuid)
 
-                <p>QR belum dibuat</p>
+                            <img
+                                src="{{ asset('storage/qr/meja_' . $meja->no_meja . '.svg') }}"
+                                width="150"
+                            >
 
-            @endif
+                        @else
 
-            <p class="uuid-text">
-                {{ $meja->qr_uuid }}
-            </p>
+                            <p>QR belum dibuat</p>
+
+                        @endif
+
+                        <p class="uuid-text">
+                            {{ $meja->qr_uuid }}
+                        </p>
+
+                    </div>
+
+                    @endforeach
+
+                </div>
+
+            </div>
+
+            <div class="right-panel">
+
+                <div class="order-list-section">
+                    <h2>Order Masuk</h2>
+
+                    @forelse($orders as $order)
+                        <div class="order-card">
+                            <h2>{{ $order->customer_name }}</h2>
+                            <p>Meja: {{ $order->table_number }}</p>
+
+                            @if($order->items->count())
+                                <p><strong>Pesanan:</strong></p>
+                                <ul class="order-items">
+                                    @foreach($order->items as $item)
+                                        <li>
+                                            {{ $item->menu?->name ?? 'Menu tidak tersedia' }}
+                                            x {{ $item->quantity }}
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+
+                            <p>Total: Rp {{ number_format($order->total) }}</p>
+                            <p>Status: <strong>{{ $order->status }}</strong></p>
+
+                            <form action="/admin/orders/{{ $order->id }}/status" method="POST">
+                                @csrf
+                                @method('PUT')
+                                <select name="status">
+                                    <option value="pending" {{ $order->status === 'pending' ? 'selected' : '' }}>
+                                        Pending
+                                    </option>
+                                    <option value="confirmed" {{ $order->status === 'confirmed' ? 'selected' : '' }}>
+                                        Diproses
+                                    </option>
+                                    <option value="completed" {{ $order->status === 'completed' ? 'selected' : '' }}>
+                                        Selesai
+                                    </option>
+                                </select>
+                                <button type="submit">Update Status</button>
+                            </form>
+                        </div>
+                    @empty
+                        <div class="order-card">
+                            <p>Tidak ada order masuk.</p>
+                        </div>
+                    @endforelse
+                </div>
+
+            </div>
 
         </div>
-
-        @endforeach
-
-    </div>
-
-</div>
-
 
     </div>
 

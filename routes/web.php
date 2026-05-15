@@ -51,12 +51,9 @@ Route::get('/admin', function () {
     if (session('role') != 'admin') {
         return redirect('/login');
     }
-    return view('admin.dashboard');
+    return redirect('/admin/dashboard');
 });
-Route::get(
-    '/admin/orders',
-    [AdminController::class, 'orders']
-);
+Route::get('/admin/orders', [AdminController::class, 'orders']);
 Route::put(
     '/admin/orders/{id}/status',
     [AdminController::class, 'updateStatus']

@@ -207,3 +207,34 @@ body{
     color: gray;
     word-break: break-all;
 }
+
+.dashboard-grid {
+    display: flex;
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.left-panel,
+.right-panel {
+    flex: 1;
+}
+
+.left-panel {
+    min-width: 420px;
+}
+
+.right-panel {
+    min-width: 380px;
+}
+
+.order-list-section {
+    background-color: white;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+}
+
+.order-list-section h2 {
+    margin-bottom: 20px;
+    color: #5c3517;
+}

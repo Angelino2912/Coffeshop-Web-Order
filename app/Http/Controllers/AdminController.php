@@ -12,16 +12,19 @@ class AdminController extends Controller
 {
     public function orders()
     {
-        $orders = Order::latest()->get();
+        $orders = Order::with('items.menu')->latest()->get();
 
         return view('admin.orders', [
             'orders' => $orders
         ]);
     }
+
     public function dashboard()
     {
         $mejas = Meja::all();
-        return view('admin.dashboard', compact('mejas'));
+        $orders = Order::with('items.menu')->orderBy('id', 'desc')->get();
+
+        return view('admin.dashboard', compact('mejas', 'orders'));
     }
 
 

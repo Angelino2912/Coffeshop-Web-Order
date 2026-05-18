@@ -12,7 +12,11 @@
 
     <div class="header">
         <h1>Dashboard</h1>
-        <p>Hi Angeline, Welcome to Cinta Rasa</p>
+        @auth
+            <p>Hai {{ auth()->user()->name }}, Welcome to Cinta Rasa</p>
+        @else
+            <p>Hai Admin, Welcome to Cinta Rasa</p>
+        @endauth
     </div>
 
     <div class="dashboard-grid">

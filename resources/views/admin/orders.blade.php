@@ -1,7 +1,7 @@
 @extends('template.main')
 
 @push('style')
-<link rel="stylesheet" href="{{ asset('style/admin/order.css') }}">
+<link rel="stylesheet" href="{{ asset('style/admin/orders.css') }}">
 @endpush
 
 @section('content')

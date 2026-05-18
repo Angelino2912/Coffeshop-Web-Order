@@ -1,4 +1,4 @@
-@extends('template.main')
+@extends('template.customer')
 
 @push('style')
 <link rel="stylesheet" href="{{ asset('style/customers/myorder.css') }}">

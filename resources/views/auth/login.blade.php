@@ -1,4 +1,4 @@
-@extends('template.main')
+@extends('template.customer')
 
 @section('content')
 @push('style')

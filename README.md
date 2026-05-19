@@ -1,59 +1,47 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+Clicket — Local Ticketing Demo
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Overview
+- Small Node/Express + static frontend demo for ticketing and simple CMS/reporting.
+- Data is stored in local JSON files: `users.json`, `events.json`, `purchases.json` (for development only).
 
-## About Laravel
+Implemented Features
+- Responsive UI: `index.html`, `ticket.html`, `payment.html` include responsive layouts and mobile-friendly tweaks.
+- Signup & Login: `/register` and `/login` endpoints with client-side validation; registration redirects to login.
+- CMS / Events Management (CRUD):
+  - Add events: `/events/add` (used by Events UI).
+  - Update events: `/events/update` (rename event or add price tier / stock).
+  - Delete events: `/events/delete`.
+  - Admin UI: "Events" menu includes Add/Edit/Delete and validation.
+- Purchases / Transactions:
+  - `/tickets/purchase` atomically allocates tickets across price tiers and records purchases in `purchases.json`.
+  - `/purchases` returns purchase history and supports filters via query parameters: `q`, `event`, `from`, `to`.
+  - `/purchases/export` exports filtered purchases as CSV for reporting.
+  - Client-side Purchase History UI includes filters and CSV export button.
+- Admin user management: `/users`, `/users/make-admin`, `/users/delete`.
+- Password flows: `/forgot`, `/reset-password`, `/users/change-password` (Change Password UI in Settings redirects to login on success).
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Security / Notes
+- This is a development demo. Passwords are hashed with `bcrypt`, but there are no sessions or tokens — endpoints accept username/password in requests.
+- File-based storage (`*.json`) is not safe for production concurrency. Use a real database for real apps.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+1. Start the server:
 
-## Learning Laravel
+```powershell
+node server.js
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+2. Open `http://localhost:3000` in your browser.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Quick testing checklist
+- Register a user via the Create account form.
+- Login, go to "Events" and add events (name + price + amount).
+- From "Tickets" buy tickets and then view "Purchase History" to see records.
+- Use "Purchase History" filters and click "Export CSV" to download a report.
+- In "Events" you can Edit (rename/add price tier) and Delete events.
 
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Files of interest
+- `server.js` — backend endpoints and JSON file helpers.
+- `index.html` — main frontend app; contains admin UI, events, history, settings.
+- `ticket.html`, `payment.html` — standalone pages used in flows.
+- `events.json`, `users.json`, `purchases.json` — file-based data stores.

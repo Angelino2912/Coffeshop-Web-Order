@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "fullname": "Kevin",
+    "username": "Kevin",
+    "email": "kev@d.com",
+    "password": "$2b$10$BB1osd/C5F/GWKHHEa158OJX8bl/LIZ2Dx/YmV7m4wZvFnTeBft/2",
+    "role": "admin"
+  },
+  {
+    "id": 2,
+    "fullname": "llm",
+    "username": "llm",
+    "email": "LLM@GMAIL.COM",
+    "password": "$2b$10$XSb6j1lnw.K34.4CrZhfvuUm/h3pMfq86VD6/TctOfWLnrJLzqwCe",
+    "role": "admin"
+  },
+  {
+    "id": 3,
+    "fullname": "Adam Kevin",
+    "username": "AdamKevin",
+    "email": "AdamKevin@gmail.com",
+    "password": "$2b$10$UajIE8rApL5BiopEqOTQiOtnVDmLOlEbjHOmrM0AUdPZlnKOxwDhu",
+    "role": "user"
+  },
+  {
+    "id": 4,
+    "fullname": "Lia2",
+    "username": "Liamneeson2",
+    "email": "Liamss@gmail.com",
+    "password": "$2b$10$BaLWr0U6.bZObnL41M0eDORu1Ab5oPUBEQlmLRWTCTjUWfwSArTR2",
+    "role": "admin"
+  },
+  {
+    "id": 6,
+    "fullname": "Ryan Fernando",
+    "username": "Ryann",
+    "email": "ryann@gmail.com",
+    "password": "$2b$10$jl1XYKLJhz4P.c3klr8SB.2dygMhULugtVSw9eqvww5Sbt/14xofi",
+    "role": "user"
+  },
+  {
+    "id": 8,
+    "fullname": "Adam1",
+    "username": "Adam1",
+    "email": "adam1@gmail.com",
+    "password": "$2b$10$5h5fDwdqAQhPQCbqeXqTR.SNiJpImqYNhtbBQcZnmm2piDCifKnmS",
+    "role": "user"
+  }
+]

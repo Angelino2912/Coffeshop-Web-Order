@@ -15,11 +15,7 @@
                 <i class="bi bi-card-list"></i> Order List
             </a>
         </li>
-        <li>
-            <a href="/admin/customers" class="{{ request()->is('admin/customers*') ? 'active' : '' }}">
-                <i class="bi bi-people"></i> Customers
-            </a>
-        </li>
+        
         <li>
             <a href="/admin/analytics" class="{{ request()->is('admin/analytics*') ? 'active' : '' }}">
                 <i class="bi bi-graph-up"></i> Analytics

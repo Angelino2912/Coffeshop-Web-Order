@@ -1,0 +1,288 @@
+[
+  {
+    "id": 1,
+    "name": "Espresso",
+    "category": "Coffee",
+    "prices": [
+      {
+        "price": 25000,
+        "stock": 100
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Americano",
+    "category": "Coffee",
+    "prices": [
+      {
+        "price": 28000,
+        "stock": 80
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Cappuccino",
+    "category": "Coffee",
+    "prices": [
+      {
+        "price": 35000,
+        "stock": 75
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Latte",
+    "category": "Coffee",
+    "prices": [
+      {
+        "price": 36000,
+        "stock": 90
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "name": "Macchiato",
+    "category": "Coffee",
+    "prices": [
+      {
+        "price": 33000,
+        "stock": 60
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "name": "Green Tea",
+    "category": "Tea",
+    "prices": [
+      {
+        "price": 20000,
+        "stock": 100
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "name": "Oolong Tea",
+    "category": "Tea",
+    "prices": [
+      {
+        "price": 22000,
+        "stock": 70
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "name": "Black Tea",
+    "category": "Tea",
+    "prices": [
+      {
+        "price": 20000,
+        "stock": 85
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "name": "Chamomile Tea",
+    "category": "Tea",
+    "prices": [
+      {
+        "price": 23000,
+        "stock": 50
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "name": "Matcha Latte",
+    "category": "Matcha",
+    "prices": [
+      {
+        "price": 40000,
+        "stock": 60
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "name": "Matcha Smoothie",
+    "category": "Matcha",
+    "prices": [
+      {
+        "price": 45000,
+        "stock": 50
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "name": "Matcha Ice Cream",
+    "category": "Matcha",
+    "prices": [
+      {
+        "price": 35000,
+        "stock": 40
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "name": "Whole Wheat Toast",
+    "category": "Toast",
+    "prices": [
+      {
+        "price": 18000,
+        "stock": 120
+      }
+    ]
+  },
+  {
+    "id": 14,
+    "name": "Avocado Toast",
+    "category": "Toast",
+    "prices": [
+      {
+        "price": 32000,
+        "stock": 60
+      }
+    ]
+  },
+  {
+    "id": 15,
+    "name": "Cheese Toast",
+    "category": "Toast",
+    "prices": [
+      {
+        "price": 25000,
+        "stock": 80
+      }
+    ]
+  },
+  {
+    "id": 16,
+    "name": "Chocolate Toast",
+    "category": "Toast",
+    "prices": [
+      {
+        "price": 28000,
+        "stock": 70
+      }
+    ]
+  },
+  {
+    "id": 17,
+    "name": "Croissant Bites",
+    "category": "Bites",
+    "prices": [
+      {
+        "price": 15000,
+        "stock": 150
+      }
+    ]
+  },
+  {
+    "id": 18,
+    "name": "Cheese Bites",
+    "category": "Bites",
+    "prices": [
+      {
+        "price": 12000,
+        "stock": 200
+      }
+    ]
+  },
+  {
+    "id": 19,
+    "name": "Chocolate Bites",
+    "category": "Bites",
+    "prices": [
+      {
+        "price": 13000,
+        "stock": 180
+      }
+    ]
+  },
+  {
+    "id": 20,
+    "name": "Blueberry Muffin Bites",
+    "category": "Bites",
+    "prices": [
+      {
+        "price": 16000,
+        "stock": 120
+      }
+    ]
+  },
+  {
+    "id": 21,
+    "name": "Orange Juice",
+    "category": "Bottled",
+    "prices": [
+      {
+        "price": 18000,
+        "stock": 100
+      }
+    ]
+  },
+  {
+    "id": 22,
+    "name": "Apple Juice",
+    "category": "Bottled",
+    "prices": [
+      {
+        "price": 16000,
+        "stock": 90
+      }
+    ]
+  },
+  {
+    "id": 23,
+    "name": "Iced Coffee Bottle",
+    "category": "Bottled",
+    "prices": [
+      {
+        "price": 28000,
+        "stock": 80
+      }
+    ]
+  },
+  {
+    "id": 24,
+    "name": "Mango Juice",
+    "category": "Bottled",
+    "prices": [
+      {
+        "price": 20000,
+        "stock": 110
+      }
+    ]
+  },
+  {
+    "id": 25,
+    "name": "Iced Tea Bottle",
+    "category": "Bottled",
+    "prices": [
+      {
+        "price": 22000,
+        "stock": 100
+      }
+    ]
+  },
+  {
+    "id": 26,
+    "name": "Milk",
+    "prices": [
+      {
+        "price": 10000,
+        "stock": 5,
+        "userId": 1
+      }
+    ]
+  }
+]

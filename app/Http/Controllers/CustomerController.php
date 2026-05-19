@@ -224,7 +224,7 @@ class CustomerController extends Controller
 
         return view(
             'customer.myorders',
-            compact('orders`')
+            compact('orders')
         );
     }
 }

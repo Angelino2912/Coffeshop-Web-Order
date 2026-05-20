@@ -24,7 +24,7 @@ class TableController extends Controller
         }
 
         // cek apakah meja sedang dipakai
-        $activeSession = TableSession::where('meja_id', $meja->id)
+        $activeSession = TableSession::where('meja_id', $meja->id)->join('meja_session','meja_session.meja_id = meja.meja_id')
             ->where('status', 'active')
             ->first();
 

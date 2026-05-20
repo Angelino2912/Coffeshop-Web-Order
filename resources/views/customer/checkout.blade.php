@@ -45,8 +45,8 @@
 
             <div class="checkout-summary" style="background: #f7f0ea; border-radius: 20px; padding: 20px; border: 1px solid rgba(92,58,33,0.12);">
                 <h3 style="margin-bottom: 14px;font-size: 20px;color: #3d2714;">Data Customer</h3>
-                <p style="margin-bottom: 10px;color: #5c3a21; font-size: 15px;   line-height: 1.7;"><strong>Nama:</strong> {{ $customer->nama ?? $customer->name ?? 'Tamu' }}</p>
-                <p style="margin-bottom: 10px;color: #5c3a21; font-size: 15px;line-height: 1.7;"><strong>Nomor Meja:</strong> {{ $customer->no_meja ?? $customer->table_number ?? '-' }}</p>
+                <p style="margin-bottom: 10px;color: #5c3a21; font-size: 15px;   line-height: 1.7;"><strong>Nama:</strong> {{ session('customer_name') }}</p>
+                <p style="margin-bottom: 10px;color: #5c3a21; font-size: 15px;line-height: 1.7;"><strong>Nomor Meja:</strong> {{ session('no_meja') }}</p>
             </div>
 
             <form action="/checkout" method="POST">

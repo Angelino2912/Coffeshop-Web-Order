@@ -11,11 +11,15 @@
             </a>
         </li>
         <li>
+            <a href="/admin/manajemen-menu" class="{{ request()->is('admin/manajemen-menu*') ? 'active' : '' }}">
+                <i class="bi bi-cup-hot"></i> Manajemen Menu
+            </a>
+        </li>
+        <li>
             <a href="/admin/orders" class="{{ request()->is('admin/orders*') ? 'active' : '' }}">
                 <i class="bi bi-card-list"></i> Order List
             </a>
         </li>
-        
         <li>
             <a href="/admin/analytics" class="{{ request()->is('admin/analytics*') ? 'active' : '' }}">
                 <i class="bi bi-graph-up"></i> Analytics
@@ -24,11 +28,6 @@
         <li>
             <a href="/admin/reviews" class="{{ request()->is('admin/reviews*') ? 'active' : '' }}">
                 <i class="bi bi-pencil"></i> Reviews
-            </a>
-        </li>
-        <li>
-            <a href="/admin/menu" class="{{ request()->is('admin/menu*') ? 'active' : '' }}">
-                <i class="bi bi-cup-hot"></i> Menu
             </a>
         </li>
     </ul>

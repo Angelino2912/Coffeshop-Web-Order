@@ -8,6 +8,7 @@ use App\Models\Meja;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Menu; // ← tambahkan ini
 class AdminController extends Controller
 {
     public function orders()
@@ -85,4 +86,37 @@ class AdminController extends Controller
         return back()->with('success', 'Meja berhasil ditambahkan');
     }
 
+    public function manajemenMenu() // ubah nama method
+    {
+    $items = Menu::all();
+    return view('admin.manajemen-menu', [
+        'items' => $items,
+        ]);
+    }
+
+    public function storeMenu(Request $request)
+{
+    $request->validate([
+        'name' => 'required',
+        'category' => 'required',
+        'price' => 'required|integer',
+    ]);
+
+    Menu::create($request->only('name', 'category', 'price'));
+
+    return back()->with('success', 'Menu berhasil ditambahkan!');
+}
+
+    public function updateMenu(Request $request, $id)
+    {
+        $menu = Menu::findOrFail($id);
+        $menu->update($request->only('name', 'category', 'price'));
+        return back()->with('success', 'Menu berhasil diupdate!');
+    }
+
+    public function destroyMenu($id)
+    {
+        Menu::findOrFail($id)->delete();
+        return back()->with('success', 'Menu berhasil dihapus!');
+    }
 }

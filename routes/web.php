@@ -67,3 +67,7 @@ Route::get('/table/end', [TableController::class, 'endSession']);
 
 Route::post('/admin/meja/generate-qr', [AdminController::class, 'generateQr']);
 Route::post('/admin/meja/store', [AdminController::class, 'storeMeja']);
+Route::get('/admin/manajemen-menu', [AdminController::class, 'manajemenMenu']);
+Route::post('/admin/manajemen-menu', [AdminController::class, 'storeMenu']);
+Route::put('/admin/manajemen-menu/{id}', [AdminController::class, 'updateMenu']);
+Route::delete('/admin/manajemen-menu/{id}', [AdminController::class, 'destroyMenu']);

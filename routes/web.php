@@ -12,30 +12,26 @@ Route::get('/', function () {
 });
 
 Route::get('/home', function () {
-    return view('home');
+    return redirect('dashboard');
 });
 
 // CUSTOMER
 Route::get('/login', function () {
-    return view('auth.login'); // hanya customer
+    return view('auth.login');
 });
 Route::post('/guest-login', [AuthController::class, 'guestLogin']);
 
-// admin
+// ADMIN AUTH
 Route::get('/admin/login', function () {
     return view('admin.login');
 });
 Route::post('/admin/login', [AuthController::class, 'adminLogin']);
-Route::get('/admin/dashboard', [AdminController::class, 'dashboard']);
 
-// CUSTOMER
+// CUSTOMER PAGES
 Route::get('/dashboard', function () {
-
     $user = Session::get('user');
-
     return view('customer.dashboard', compact('user'));
 });
-
 Route::get('/menu', [CustomerController::class, 'menu']);
 Route::post('/cart/add', [CustomerController::class, 'addToCart']);
 Route::get('/cart', [CustomerController::class, 'cart']);
@@ -44,7 +40,12 @@ Route::post('/cart/remove', [CustomerController::class, 'removeFromCart']);
 Route::get('/checkout', [CustomerController::class, 'checkout']);
 Route::post('/checkout', [CustomerController::class, 'placeOrder']);
 Route::get('/order-confirmation', [CustomerController::class, 'orderConfirmation']);
-Route::get('/my-orders',[CustomerController::class, 'myOrders']);
+Route::get('/my-orders', [CustomerController::class, 'myOrders']);
+
+// TABLE (QR Scan) — /table/end dan /table/confirm harus di atas /table/{qr}
+Route::get('/table/end', [TableController::class, 'endSession']);
+Route::post('/table/confirm', [TableController::class, 'confirm']);
+Route::get('/table/{qr}', [TableController::class, 'scan']);
 
 // ADMIN
 Route::get('/admin', function () {
@@ -53,21 +54,36 @@ Route::get('/admin', function () {
     }
     return redirect('/admin/dashboard');
 });
+Route::get('/admin/dashboard', [AdminController::class, 'dashboard']);
 Route::get('/admin/orders', [AdminController::class, 'orders']);
-Route::put(
-    '/admin/orders/{id}/status',
-    [AdminController::class, 'updateStatus']
-);
-
-Route::get('/table/{qr}', [TableController::class, 'scan']);
-Route::post('/table/confirm', [TableController::class, 'confirm']);
-Route::get('/table/end', [TableController::class, 'endSession']);
-
-
-
+Route::put('/admin/orders/{id}/status', [AdminController::class, 'updateStatus']);
 Route::post('/admin/meja/generate-qr', [AdminController::class, 'generateQr']);
 Route::post('/admin/meja/store', [AdminController::class, 'storeMeja']);
+Route::get('/admin/meja/status', [AdminController::class, 'mejaStatus']);
 Route::get('/admin/manajemen-menu', [AdminController::class, 'manajemenMenu']);
 Route::post('/admin/manajemen-menu', [AdminController::class, 'storeMenu']);
 Route::put('/admin/manajemen-menu/{id}', [AdminController::class, 'updateMenu']);
 Route::delete('/admin/manajemen-menu/{id}', [AdminController::class, 'destroyMenu']);
+Route::get('/admin/analytics', [AdminController::class, 'analytics'])->name('admin.analytics');
+
+// TEMPORARY UTILITY ROUTES (hapus setelah dipakai)
+Route::get('/admin/fix-qr', function () {
+    \App\Models\Meja::all()->each(function ($meja) {
+        if (!$meja->qr_uuid) {
+            $meja->qr_uuid = \Illuminate\Support\Str::uuid();
+            $meja->save();
+        }
+    });
+    return 'Done: semua meja sudah punya UUID';
+});
+
+Route::get('/admin/force-generate-qr', function () {
+    $mejas = \App\Models\Meja::all();
+    foreach ($mejas as $meja) {
+        $url = url('/table/' . $meja->qr_uuid);
+        $qrImage = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(300)->generate($url);
+        \Illuminate\Support\Facades\Storage::disk('public')->put('qr/meja_' . $meja->no_meja . '.svg', $qrImage);
+    }
+    return 'QR semua meja berhasil digenerate';
+});
+Route::post('/admin/meja/{no_meja}/delete', [TableController::class, 'destroy']);

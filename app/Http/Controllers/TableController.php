@@ -5,46 +5,54 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Meja;
 use App\Models\TableSession;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Session;
 
 class TableController extends Controller
 {
-    /**
-     * STEP 1: Scan QR
-     * URL: /table/{qr_uuid}
-     */
     public function scan($qr)
     {
-        // cari meja berdasarkan UUID QR
         $meja = Meja::where('qr_uuid', $qr)->first();
 
         if (!$meja) {
-            return abort(404, 'QR tidak valid');
+            abort(404, 'QR tidak valid');
         }
 
-        // cek apakah meja sedang dipakai
-        $activeSession = TableSession::where('meja_id', $meja->id)->join('meja_session','meja_session.meja_id = meja.meja_id')
+        // cari session aktif
+        $activeSession = TableSession::where('meja_id', $meja->id)
             ->where('status', 'active')
             ->first();
 
+        // jika ada session aktif
         if ($activeSession) {
-            return redirect('/login')->with('error', 'Meja sedang digunakan');
+
+            // kalau session milik user yang sama
+            if (session('session_uuid') == $activeSession->session_uuid) {
+                return redirect('/dashboard');
+            }
+
+            // AUTO EXPIRE SESSION LAMA (lebih dari 3 jam)
+            if ($activeSession->started_at < now()->subHours(3)) {
+
+                $activeSession->update([
+                    'status' => 'finished',
+                    'ended_at' => now()
+                ]);
+
+            } else {
+
+                return abort(403, 'MEJA SEDANG DIGUNAKAN OLEH TAMU LAIN.');
+            }
         }
 
-        // simpan sementara ke session (untuk form input nama)
         session([
             'meja_id_temp' => $meja->id,
-            'no_meja_temp' => $meja->no_meja
+            'no_meja_temp' => $meja->no_meja,
         ]);
 
-        // tampilkan form input nama
         return view('auth.login', compact('meja'));
     }
 
-    /**
-     * STEP 2: Confirm nama + LOCK meja
-     */
     public function confirm(Request $request)
     {
         $request->validate([
@@ -63,52 +71,79 @@ class TableController extends Controller
             return redirect('/home')->with('error', 'Meja tidak valid');
         }
 
-        // LOCK MEJA (create session)
-        $session = TableSession::create([
-            'meja_id' => $meja->id,
-            'session_uuid' => Str::uuid(),
-            'customer_name' => $request->customer_name,
-            'status' => 'active',
-            'started_at' => now()
-        ]);
+        try {
+            $session = DB::transaction(function () use ($meja, $request) {
+                // Lock row agar tidak ada 2 session dibuat bersamaan
+                $existing = TableSession::where('meja_id', $meja->id)
+                    ->where('status', 'active')
+                    ->lockForUpdate()
+                    ->first();
 
-        // simpan ke session Laravel
+                if ($existing) {
+                    throw new \Exception('Meja sudah digunakan oleh tamu lain.');
+                }
+
+                return TableSession::create([
+                    'meja_id'       => $meja->id,
+                    'session_uuid'  => Str::uuid(),
+                    'customer_name' => $request->customer_name,
+                    'status'        => 'active',
+                    'started_at'    => now(),
+                ]);
+            });
+        } catch (\Exception $e) {
+            return redirect('/home')->with('error', $e->getMessage());
+        }
+
         session([
-            'meja_id' => $meja->id,
-            'no_meja' => $meja->no_meja,
+            'meja_id'       => $meja->id,
+            'no_meja'       => $meja->no_meja,
             'customer_name' => $request->customer_name,
-            'session_uuid' => $session->session_uuid
+            'session_uuid'  => $session->session_uuid,
         ]);
 
-        // hapus temp session
         session()->forget(['meja_id_temp', 'no_meja_temp']);
 
-        // langsung ke menu
         return redirect('/dashboard')->with('success', 'Selamat datang di meja ' . $meja->no_meja);
     }
 
-    /**
-     * OPTIONAL: end session (checkout meja)
-     */
     public function endSession()
     {
         $sessionUuid = session('session_uuid');
 
-        if ($sessionUuid) {
-            TableSession::where('session_uuid', $sessionUuid)
-                ->update([
-                    'status' => 'finished',
-                    'ended_at' => now()
-                ]);
+        if (!$sessionUuid) {
+            return redirect('/')->with('error', 'Tidak ada sesi aktif.');
         }
 
-        session()->forget([
-            'meja_id',
-            'no_meja',
-            'customer_name',
-            'session_uuid'
-        ]);
+        TableSession::where('session_uuid', $sessionUuid)
+            ->where('status', 'active')
+            ->update([
+                'status'   => 'finished',
+                'ended_at' => now(),
+            ]);
 
-        return redirect('/dashboard')->with('success', 'Terima kasih sudah datang');
+        session()->flush();
+
+        return redirect('/')->with('success', 'Terima kasih sudah datang!');
     }
+
+    public function destroy($no_meja)
+    {
+        $meja = Meja::where('no_meja', $no_meja)->firstOrFail();
+
+        // Cek ada order aktif tidak
+        $aktif = \App\Models\Order::where('table_number', $no_meja)
+                    ->whereIn('status', ['pending', 'confirmed'])
+                    ->exists();
+
+        if ($aktif) {
+            return response()->json(['success' => false, 'message' => 'Meja masih aktif.']);
+        }
+
+        $meja->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    
 }

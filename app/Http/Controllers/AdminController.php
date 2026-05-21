@@ -8,7 +8,8 @@ use App\Models\Meja;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\Storage;
-use App\Models\Menu; // ← tambahkan ini
+use App\Models\Menu;
+
 class AdminController extends Controller
 {
     public function orders()
@@ -23,24 +24,52 @@ class AdminController extends Controller
     public function dashboard()
     {
         $mejas = Meja::all();
-        $orders = Order::with('items.menu')->orderBy('id', 'desc')->get();
 
-        return view('admin.dashboard', compact('mejas', 'orders'));
+        // Untuk stat cards — hanya hari ini
+        $ordersToday = Order::whereDate('created_at', today())->get();
+
+        // Untuk order masuk — semua order tanpa filter status
+        $orders = Order::with('items.menu')
+                       ->orderBy('id', 'desc')
+                       ->get();
+
+        // Weekly chart (7 hari terakhir)
+        $weeklyLabels = [];
+        $weeklyData   = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date           = now()->subDays($i);
+            $weeklyLabels[] = $date->locale('id')->isoFormat('ddd');
+            $weeklyData[]   = (int) Order::whereDate('created_at', $date)->sum('total');
+        }
+
+        // Category chart
+        $categoryData = [
+            (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->where('category', 'makanan'))->sum('quantity'),
+            (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->where('category', 'minuman'))->sum('quantity'),
+            (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->where('category', 'snack'))->sum('quantity'),
+        ];
+
+        return view('admin.dashboard', compact(
+            'mejas',
+            'orders',
+            'ordersToday',
+            'weeklyLabels',
+            'weeklyData',
+            'categoryData',
+        ));
     }
-
 
     public function updateStatus(Request $request, $id)
     {
-        $order = Order::findOrFail($id);
-
-        $order->status = $request->status;
-
+        $order         = Order::findOrFail($id);
+        $order->status = $request->input('status');
         $order->save();
 
-        return back()->with(
-            'success',
-            'Status pesanan berhasil diupdate'
-        );
+        if ($request->expectsJson() || $request->isXmlHttpRequest()) {
+            return response()->json(['success' => true, 'status' => $order->status]);
+        }
+
+        return back()->with('success', 'Status pesanan berhasil diupdate');
     }
 
     public function generateQr()
@@ -48,24 +77,13 @@ class AdminController extends Controller
         $mejas = Meja::all();
 
         foreach ($mejas as $meja) {
-
-            // kalau belum ada UUID
             if (!$meja->qr_uuid) {
                 $meja->qr_uuid = Str::uuid();
                 $meja->save();
             }
 
-            // link QR
-            $url = url('/table/' . $meja->qr_uuid);
-
-            // generate QR image
-            $qrImage = QrCode::format('svg')
-                ->size(300)
-                ->generate($url);
-
-            $fileName = 'qr/meja_' . $meja->no_meja . '.svg';
-
-            // simpan file
+            $url      = url('/table/' . $meja->qr_uuid);
+            $qrImage  = QrCode::format('svg')->size(300)->generate($url);
             $fileName = 'qr/meja_' . $meja->no_meja . '.svg';
 
             Storage::disk('public')->put($fileName, $qrImage);
@@ -73,50 +91,157 @@ class AdminController extends Controller
 
         return redirect()->back()->with('success', 'QR semua meja berhasil digenerate');
     }
+
     public function storeMeja(Request $request)
     {
         $request->validate([
             'no_meja' => 'required|unique:meja,no_meja'
         ]);
 
-        Meja::create([
-            'no_meja' => $request->no_meja
-        ]);
+        $meja          = new Meja();
+        $meja->no_meja = $request->no_meja;
+        $meja->qr_uuid = Str::uuid();
+        $meja->save();
 
-        return back()->with('success', 'Meja berhasil ditambahkan');
+        $url     = url('/table/' . $meja->qr_uuid);
+        $qrImage = QrCode::format('svg')->size(300)->generate($url);
+        Storage::disk('public')->put('qr/meja_' . $meja->no_meja . '.svg', $qrImage);
+
+        return back()->with('success', 'Meja berhasil ditambahkan & QR otomatis digenerate');
     }
 
-    public function manajemenMenu() // ubah nama method
+    public function mejaStatus()
     {
-    $items = Menu::all();
-    return view('admin.manajemen-menu', [
-        'items' => $items,
+        $mejas = Meja::all()->map(function ($meja) {
+            // Hanya cek order yang masih aktif (pending/confirmed)
+            // completed tidak diikutkan agar meja langsung reset ke kosong
+            $activeOrder = Order::where('table_number', $meja->no_meja)
+                ->whereIn('status', ['pending', 'confirmed'])
+                ->latest()
+                ->first();
+
+            if ($activeOrder && $activeOrder->status === 'confirmed') {
+                $status       = 'aktif';   // merah — sedang diproses dapur
+                $customerName = $activeOrder->customer_name;
+            } elseif ($activeOrder && $activeOrder->status === 'pending') {
+                $status       = 'pending'; // hijau — baru pesan, belum diproses
+                $customerName = $activeOrder->customer_name;
+            } else {
+                $status       = 'kosong';  // abu-abu — tidak ada order aktif
+                $customerName = null;      // nama dikosongkan
+            }
+
+            return [
+                'no_meja'       => $meja->no_meja,
+                'qr_uuid'       => $meja->qr_uuid,
+                'status'        => $status,
+                'customer_name' => $customerName,
+            ];
+        });
+
+        return response()->json($mejas);
+    }
+
+    public function manajemenMenu()
+    {
+        $items = Menu::all();
+
+        return view('admin.manajemen-menu', [
+            'items' => $items,
         ]);
     }
 
     public function storeMenu(Request $request)
-{
-    $request->validate([
-        'name' => 'required',
-        'category' => 'required',
-        'price' => 'required|integer',
-    ]);
+    {
+        $request->validate([
+            'name'     => 'required',
+            'category' => 'required',
+            'price'    => 'required|integer',
+        ]);
 
-    Menu::create($request->only('name', 'category', 'price'));
+        Menu::create($request->only('name', 'category', 'price'));
 
-    return back()->with('success', 'Menu berhasil ditambahkan!');
-}
+        return back()->with('success', 'Menu berhasil ditambahkan!');
+    }
 
     public function updateMenu(Request $request, $id)
     {
         $menu = Menu::findOrFail($id);
         $menu->update($request->only('name', 'category', 'price'));
+
         return back()->with('success', 'Menu berhasil diupdate!');
     }
 
     public function destroyMenu($id)
     {
         Menu::findOrFail($id)->delete();
+
         return back()->with('success', 'Menu berhasil dihapus!');
+    }
+
+    public function analytics()
+    {
+        // Stat cards
+        $totalPendapatan = Order::where('status', 'completed')->sum('total');
+        $totalOrder      = Order::count();
+        $rataRata        = $totalOrder > 0 ? $totalPendapatan / $totalOrder : 0;
+        $totalItem       = \App\Models\OrderItem::sum('quantity');
+
+        // Recent orders — semua order tanpa limit
+        $recentOrders = Order::latest()->get();
+
+        // Weekly chart (7 hari)
+        $weeklyLabels = [];
+        $weeklyData   = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date           = now()->subDays($i);
+            $weeklyLabels[] = $date->locale('id')->isoFormat('ddd');
+            $weeklyData[]   = (int) Order::whereDate('created_at', $date)->sum('total');
+        }
+
+        // Monthly chart (12 bulan)
+        $monthlyLabels = [];
+        $monthlyData   = [];
+        for ($i = 11; $i >= 0; $i--) {
+            $date            = now()->subMonths($i);
+            $monthlyLabels[] = $date->locale('id')->isoFormat('MMM YY');
+            $monthlyData[]   = (int) Order::whereYear('created_at', $date->year)
+                                          ->whereMonth('created_at', $date->month)
+                                          ->sum('total');
+        }
+
+        // Category chart
+        $categoryData = [
+            (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->where('category', 'makanan'))->sum('quantity'),
+            (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->where('category', 'minuman'))->sum('quantity'),
+            (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->where('category', 'snack'))->sum('quantity'),
+        ];
+
+        // Top menu terlaris
+        $topMenus = \App\Models\OrderItem::with('menu')
+            ->selectRaw('menu_id, SUM(quantity) as total_qty')
+            ->groupBy('menu_id')
+            ->orderByDesc('total_qty')
+            ->limit(5)
+            ->get()
+            ->map(fn($item) => (object)[
+                'name'      => $item->menu?->name ?? 'Menu dihapus',
+                'category'  => $item->menu?->category ?? '-',
+                'total_qty' => $item->total_qty,
+            ]);
+
+        return view('admin.analytics', compact(
+            'totalPendapatan',
+            'totalOrder',
+            'rataRata',
+            'totalItem',
+            'recentOrders',
+            'weeklyLabels',
+            'weeklyData',
+            'monthlyLabels',
+            'monthlyData',
+            'categoryData',
+            'topMenus',
+        ));
     }
 }

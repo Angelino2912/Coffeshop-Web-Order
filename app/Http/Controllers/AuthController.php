@@ -25,22 +25,23 @@ class AuthController extends Controller
         return back()->with('error', 'Login admin gagal');
     }
 
-
     // CUSTOMER (GUEST)
     public function guestLogin(Request $request)
     {
         $request->validate([
-            'nama' => 'required',
+            'nama'    => 'required',
             'no_meja' => 'required'
         ]);
 
         $customer = Customer::create([
-            'nama' => $request->nama,
+            'nama'    => $request->nama,
             'no_meja' => $request->no_meja
         ]);
 
         Session::put('user', $customer);
         Session::put('role', 'customer');
+        Session::put('customer_name', $request->nama);
+        Session::put('no_meja', $request->no_meja);
 
         return redirect('/dashboard');
     }

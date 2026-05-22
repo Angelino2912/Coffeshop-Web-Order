@@ -57,7 +57,8 @@
     <div class="modal-overlay" id="modalTambah">
         <div class="modal-box">
             <h2>Tambah Menu</h2>
-            <form action="/admin/manajemen-menu" method="POST">
+            {{-- enctype wajib untuk upload file --}}
+            <form action="/admin/manajemen-menu" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="form-group">
                     <label>Nama Menu</label>
@@ -74,6 +75,12 @@
                     <label>Harga</label>
                     <input type="number" name="price" required placeholder="Contoh: 25000">
                 </div>
+                {{-- INPUT FOTO --}}
+                <div class="form-group">
+                    <label>Foto Menu <small style="color:#9ca3af">(opsional)</small></label>
+                    <input type="file" name="image" accept="image/*" onchange="previewFoto(this, 'previewTambah')">
+                    <img id="previewTambah" src="" alt="" style="display:none;margin-top:8px;width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;">
+                </div>
                 <div class="modal-actions">
                     <button type="button" class="btn-batal" onclick="document.getElementById('modalTambah').style.display='none'">Batal</button>
                     <button type="submit" class="btn-simpan">Simpan</button>
@@ -85,7 +92,8 @@
     <div class="modal-overlay" id="modalEdit">
         <div class="modal-box">
             <h2>Edit Menu</h2>
-            <form action="" method="POST" id="formEdit">
+            {{-- enctype wajib untuk upload file --}}
+            <form action="" method="POST" id="formEdit" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
                 <div class="form-group">
@@ -103,6 +111,12 @@
                     <label>Harga</label>
                     <input type="number" name="price" id="editPrice" required>
                 </div>
+                {{-- INPUT FOTO --}}
+                <div class="form-group">
+                    <label>Foto Menu <small style="color:#9ca3af">(kosongkan jika tidak diganti)</small></label>
+                    <input type="file" name="image" accept="image/*" onchange="previewFoto(this, 'previewEdit')">
+                    <img id="previewEdit" src="" alt="" style="display:none;margin-top:8px;width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;">
+                </div>
                 <div class="modal-actions">
                     <button type="button" class="btn-batal" onclick="document.getElementById('modalEdit').style.display='none'">Batal</button>
                     <button type="submit" class="btn-simpan">Update</button>
@@ -119,7 +133,21 @@ function openEdit(id, name, category, price) {
     document.getElementById('editCategory').value = category;
     document.getElementById('editPrice').value = price;
     document.getElementById('formEdit').action = '/admin/manajemen-menu/' + id;
+    // reset preview foto saat modal dibuka
+    document.getElementById('previewEdit').style.display = 'none';
     document.getElementById('modalEdit').style.display = 'flex';
+}
+
+function previewFoto(input, previewId) {
+    const img = document.getElementById(previewId);
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            img.src = e.target.result;
+            img.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
 }
 </script>
 @endsection

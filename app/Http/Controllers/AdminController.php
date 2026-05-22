@@ -25,15 +25,12 @@ class AdminController extends Controller
     {
         $mejas = Meja::all();
 
-        // Untuk stat cards — hanya hari ini
         $ordersToday = Order::whereDate('created_at', today())->get();
 
-        // Untuk order masuk — semua order tanpa filter status
         $orders = Order::with('items.menu')
                        ->orderBy('id', 'desc')
                        ->get();
 
-        // Weekly chart (7 hari terakhir)
         $weeklyLabels = [];
         $weeklyData   = [];
         for ($i = 6; $i >= 0; $i--) {
@@ -42,7 +39,6 @@ class AdminController extends Controller
             $weeklyData[]   = (int) Order::whereDate('created_at', $date)->sum('total');
         }
 
-        // Category chart
         $categoryData = [
             (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->where('category', 'makanan'))->sum('quantity'),
             (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->where('category', 'minuman'))->sum('quantity'),
@@ -113,22 +109,20 @@ class AdminController extends Controller
     public function mejaStatus()
     {
         $mejas = Meja::all()->map(function ($meja) {
-            // Hanya cek order yang masih aktif (pending/confirmed)
-            // completed tidak diikutkan agar meja langsung reset ke kosong
             $activeOrder = Order::where('table_number', $meja->no_meja)
                 ->whereIn('status', ['pending', 'confirmed'])
                 ->latest()
                 ->first();
 
             if ($activeOrder && $activeOrder->status === 'confirmed') {
-                $status       = 'aktif';   // merah — sedang diproses dapur
+                $status       = 'aktif';
                 $customerName = $activeOrder->customer_name;
             } elseif ($activeOrder && $activeOrder->status === 'pending') {
-                $status       = 'pending'; // hijau — baru pesan, belum diproses
+                $status       = 'pending';
                 $customerName = $activeOrder->customer_name;
             } else {
-                $status       = 'kosong';  // abu-abu — tidak ada order aktif
-                $customerName = null;      // nama dikosongkan
+                $status       = 'kosong';
+                $customerName = null;
             }
 
             return [
@@ -151,23 +145,45 @@ class AdminController extends Controller
         ]);
     }
 
+    // ✅ DIUPDATE: tambah handle upload foto
     public function storeMenu(Request $request)
     {
         $request->validate([
             'name'     => 'required',
             'category' => 'required',
             'price'    => 'required|integer',
+            'image'    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
-        Menu::create($request->only('name', 'category', 'price'));
+        $data = $request->only('name', 'category', 'price');
+
+        if ($request->hasFile('image')) {
+            $data['image'] = $request->file('image')->store('menu', 'public');
+        }
+
+        Menu::create($data);
 
         return back()->with('success', 'Menu berhasil ditambahkan!');
     }
 
+    // ✅ DIUPDATE: tambah handle upload foto, foto lama otomatis terhapus
     public function updateMenu(Request $request, $id)
     {
+        $request->validate([
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+
         $menu = Menu::findOrFail($id);
-        $menu->update($request->only('name', 'category', 'price'));
+        $data = $request->only('name', 'category', 'price');
+
+        if ($request->hasFile('image')) {
+            if ($menu->image) {
+                Storage::disk('public')->delete($menu->image);
+            }
+            $data['image'] = $request->file('image')->store('menu', 'public');
+        }
+
+        $menu->update($data);
 
         return back()->with('success', 'Menu berhasil diupdate!');
     }
@@ -181,16 +197,13 @@ class AdminController extends Controller
 
     public function analytics()
     {
-        // Stat cards
         $totalPendapatan = Order::where('status', 'completed')->sum('total');
         $totalOrder      = Order::count();
         $rataRata        = $totalOrder > 0 ? $totalPendapatan / $totalOrder : 0;
         $totalItem       = \App\Models\OrderItem::sum('quantity');
 
-        // Recent orders — semua order tanpa limit
         $recentOrders = Order::latest()->get();
 
-        // Weekly chart (7 hari)
         $weeklyLabels = [];
         $weeklyData   = [];
         for ($i = 6; $i >= 0; $i--) {
@@ -199,7 +212,6 @@ class AdminController extends Controller
             $weeklyData[]   = (int) Order::whereDate('created_at', $date)->sum('total');
         }
 
-        // Monthly chart (12 bulan)
         $monthlyLabels = [];
         $monthlyData   = [];
         for ($i = 11; $i >= 0; $i--) {
@@ -210,14 +222,12 @@ class AdminController extends Controller
                                           ->sum('total');
         }
 
-        // Category chart
         $categoryData = [
             (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->where('category', 'makanan'))->sum('quantity'),
             (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->where('category', 'minuman'))->sum('quantity'),
             (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->where('category', 'snack'))->sum('quantity'),
         ];
 
-        // Top menu terlaris
         $topMenus = \App\Models\OrderItem::with('menu')
             ->selectRaw('menu_id, SUM(quantity) as total_qty')
             ->groupBy('menu_id')

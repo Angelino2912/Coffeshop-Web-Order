@@ -43,6 +43,6 @@
     </table>
 
     <a href="/menu" class="button">Tambah Pesanan Lain</a>
-     <a href="/my-orders" class="button secondary">Lihat Riwayat Pesanan</a>
+    <a href="/my-orders" class="button secondary">Lihat Riwayat Pesanan</a>
 </div>
 @endsection

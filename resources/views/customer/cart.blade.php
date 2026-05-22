@@ -34,18 +34,20 @@
                     <tr style="border-bottom: 1px solid #f0ece8">
                         <td>{{ $item['name'] }}</td>
                         <td>
-                            <input type="hidden" id="{{ "price_".$item['id'] }}" value="{{ $item['price'] }}">   
+                            <input type="hidden" id="price_{{ $item['id'] }}" value="{{ $item['price'] }}">
                             Rp {{ number_format($item['price'], 0, ',', '.') }}
                         </td>
                         <td>
-                            <form action="/cart/update" method="POST" class="form-inline">
-                                @csrf
-                                <input type="hidden" name="item_id" value="{{ $item['id'] }}">
-                                <input type="number" onchange="update_harga('{{ $item['id'] }}')" name="quantity" id="qty_{{ $item['id'] }}" value="{{ $item['quantity'] }}" min="0" style="width:60px;">
-                                <button type="submit" class="button">Perbarui</button>
-                            </form>
+                            <input type="number"
+                                   id="qty_{{ $item['id'] }}"
+                                   value="{{ $item['quantity'] }}"
+                                   min="0"
+                                   style="width:60px;"
+                                   onchange="updateCart('{{ $item['id'] }}', this.value)">
                         </td>
-                        <td id="total_harga_{{ $item['id'] }}">Rp {{ number_format($item['price'] * $item['quantity'], 0, ',', '.') }}</td>
+                        <td id="total_harga_{{ $item['id'] }}" data-raw="{{ $item['price'] * $item['quantity'] }}">
+                            Rp {{ number_format($item['price'] * $item['quantity'], 0, ',', '.') }}
+                        </td>
                         <td>
                             <form action="/cart/remove" method="POST">
                                 @csrf
@@ -56,10 +58,10 @@
                     </tr>
                 @endforeach
             </tbody>
-            <tfoot style=" background: #f7f0ea; font-size: 16px;">
+            <tfoot style="background: #f7f0ea; font-size: 16px;">
                 <tr>
                     <td colspan="3"><strong>Total</strong></td>
-                    <td colspan="2"><strong>Rp {{ number_format($total, 0, ',', '.') }}</strong></td>
+                    <td colspan="2"><strong id="grand_total">Rp {{ number_format($total, 0, ',', '.') }}</strong></td>
                 </tr>
             </tfoot>
         </table>
@@ -67,22 +69,53 @@
     @endif
 </div>
 @endsection
+
 @push('custom_script')
 <script>
-    function update_harga(id) {
-        var qty_item = document.getElementById('qty_'+id).value
-        var barang_price = document.getElementById('price_'+id).value
-        var total_harga = parseInt(qty_item) * parseInt(barang_price)
-        const formatRupiah = new Intl.NumberFormat('id-ID', {
+    function updateCart(itemId, qty) {
+        qty = parseInt(qty) || 0;
+
+        // Update subtotal langsung di UI
+        var price    = parseInt(document.getElementById('price_' + itemId).value) || 0;
+        var subtotal = qty * price;
+        var subtotalEl = document.getElementById('total_harga_' + itemId);
+
+        if (qty === 0) {
+            // Hapus baris dari tampilan jika qty 0
+            subtotalEl.closest('tr').remove();
+        } else {
+            subtotalEl.dataset.raw = subtotal;
+            subtotalEl.innerText   = formatRupiah(subtotal);
+        }
+
+        hitung_grand_total();
+
+        // Kirim ke server via AJAX
+        fetch('/cart/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ item_id: itemId, quantity: qty })
+        });
+    }
+
+    function hitung_grand_total() {
+        var semua = document.querySelectorAll('[id^="total_harga_"]');
+        var total = 0;
+        semua.forEach(function(el) {
+            total += parseInt(el.dataset.raw) || 0;
+        });
+        document.getElementById('grand_total').innerText = formatRupiah(total);
+    }
+
+    function formatRupiah(angka) {
+        return new Intl.NumberFormat('id-ID', {
             style: 'currency',
             currency: 'IDR',
-            minimumFractionDigits: 0 
-        }).format(total_harga);
-
-        document.getElementById('total_harga_'+id).innerText =formatRupiah
-
-        console.log(qty_item)
-        console.log(barang_price)
+            minimumFractionDigits: 0
+        }).format(angka);
     }
 </script>
 @endpush

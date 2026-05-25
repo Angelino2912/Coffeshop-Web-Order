@@ -196,3 +196,11 @@
 @media (max-width: 600px) {
     .stat-row { grid-template-columns: 1fr 1fr; }
 }
+body {
+    background:linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),
+    url('https://images.unsplash.com/photo-1509042239860-f550ce710b93');
+    background-size: cover;
+    background-position: center;
+    min-height: 100vh;
+    padding: 20px;
+}

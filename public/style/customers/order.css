@@ -38,10 +38,10 @@ body{
     0 20px 50px rgba(0,0,0,0.18);
 }
 
-.box a:first-child{
-    text-decoration:none;
-    color:#8b5a2b;
-    font-weight:600;
+.back-link {
+    text-decoration: none;
+    color: #8b5a2b;
+    font-weight: 600;
 }
 
 .box h1{

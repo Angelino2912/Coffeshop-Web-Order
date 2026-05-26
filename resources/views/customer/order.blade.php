@@ -6,7 +6,7 @@
 
 @section('content')
 <div class="box">
-    <a href="/dashboard">← Kembali ke Dashboard</a>
+   <a href="/dashboard" class="back-link">← Kembali ke Dashboard</a>
     <h1>Pesanan Berhasil Dikonfirmasi</h1>
     <p>Terima kasih! Pesananmu sudah tersimpan dan bisa dibayar sekarang.</p>
 
@@ -42,7 +42,8 @@
         </tfoot>
     </table>
 
-    <a href="/menu" class="button">Tambah Pesanan Lain</a>
-    <a href="/my-orders" class="button secondary">Lihat Riwayat Pesanan</a>
+        <div style="text-align: center;">
+        <a href="/menu" class="button">Tambah Pesanan Lain</a>
+    </div>
 </div>
 @endsection

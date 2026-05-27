@@ -8,5 +8,5 @@ class Admin extends Model
 {
     // nama tabel di database
     protected $table = 'admin'; 
-    protected $fillable = ['name', 'email', 'password'];
+    protected $fillable = ['name', 'email', 'password','role'];
 }

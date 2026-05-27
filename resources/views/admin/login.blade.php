@@ -12,7 +12,7 @@
 <div class="container">
 
     <div class="login-box">
-        <h1>Admin Panel</h1>
+        <h1>Login</h1>
         <p>Silakan login untuk mengelola sistem</p>
 
         <!-- ERROR MESSAGE -->

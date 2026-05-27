@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\KasirController;
 use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\TableController;
 
@@ -42,15 +43,15 @@ Route::post('/checkout', [CustomerController::class, 'placeOrder']);
 Route::get('/order-confirmation', [CustomerController::class, 'orderConfirmation']);
 Route::get('/my-orders', [CustomerController::class, 'myOrders']);
 
-// TABLE (QR Scan) — /table/end dan /table/confirm harus di atas /table/{qr}
+// TABLE (QR Scan)
 Route::get('/table/end', [TableController::class, 'endSession']);
 Route::post('/table/confirm', [TableController::class, 'confirm']);
 Route::get('/table/{qr}', [TableController::class, 'scan']);
 
 // ADMIN
 Route::get('/admin', function () {
-    if (session('role') != 'admin') {
-        return redirect('/login');
+    if (session('role') !== 'admin') {
+        return redirect('/admin/login'); // ← fix: arahkan ke admin login
     }
     return redirect('/admin/dashboard');
 });
@@ -65,6 +66,11 @@ Route::post('/admin/manajemen-menu', [AdminController::class, 'storeMenu']);
 Route::put('/admin/manajemen-menu/{id}', [AdminController::class, 'updateMenu']);
 Route::delete('/admin/manajemen-menu/{id}', [AdminController::class, 'destroyMenu']);
 Route::get('/admin/analytics', [AdminController::class, 'analytics'])->name('admin.analytics');
+
+// KASIR
+Route::get('/kasir/dashboard', [KasirController::class, 'dashboard']);
+Route::post('/kasir/meja/store', [KasirController::class, 'storeMeja']);
+Route::post('/kasir/orders/{id}/status', [KasirController::class, 'updateStatus']);
 
 // TEMPORARY UTILITY ROUTES (hapus setelah dipakai)
 Route::get('/admin/fix-qr', function () {
@@ -86,4 +92,5 @@ Route::get('/admin/force-generate-qr', function () {
     }
     return 'QR semua meja berhasil digenerate';
 });
+
 Route::post('/admin/meja/{no_meja}/delete', [TableController::class, 'destroy']);

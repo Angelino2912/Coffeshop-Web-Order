@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
-        protected $fillable = [
+    protected $fillable = [
         'customer_name',
         'table_number',
         'total',
@@ -17,5 +17,10 @@ class Order extends Model
     public function items()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function review()
+    {
+        return $this->hasOne(Review::class);
     }
 }

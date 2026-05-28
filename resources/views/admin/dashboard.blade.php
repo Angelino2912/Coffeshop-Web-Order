@@ -176,7 +176,10 @@
                                 <option value="confirmed" {{ $order->status === 'confirmed' ? 'selected' : '' }}>Diproses</option>
                                 <option value="completed" {{ $order->status === 'completed' ? 'selected' : '' }}>Selesai</option>
                             </select>
-                            <button type="button" class="btn-update-status" data-id="{{ $order->id }}">Update</button>
+                            <button type="button" class="btn-update-status" data-id="{{ $order->id }}">
+                                <span class="button-text">Update</span>
+                                <span class="button-spinner" aria-label="Memuat"></span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -359,44 +362,46 @@ function showBarcode(noMeja, uuid) {
 
 // ─── Update Status Order via AJAX ─────────────────────────────────────────────
 document.addEventListener('click', function (e) {
-    if (!e.target.classList.contains('btn-update-status')) return;
+    var btn = e.target.closest('.btn-update-status');
+    if (!btn) return;
 
-    var id     = e.target.dataset.id;
-    var form   = e.target.closest('.status-form');
+    var id     = btn.dataset.id;
+    var form   = btn.closest('.status-form');
     var select = form.querySelector('.status-select');
     var status = select.value;
     var token  = select.dataset.token;
-    var btn    = e.target;
 
-    btn.textContent = '...';
-    btn.disabled    = true;
+    btn.classList.add('loading');
+    btn.disabled = true;
 
     fetch('/admin/orders/' + id + '/status', {
         method: 'POST',
         headers: {
             'Content-Type'           : 'application/json',
+            'Accept'                 : 'application/json',
+            'X-Requested-With'       : 'XMLHttpRequest',
             'X-CSRF-TOKEN'           : token,
             'X-HTTP-Method-Override' : 'PUT'
         },
         body: JSON.stringify({ status: status })
     })
-    .then(function (res) {
-        if (res.ok) {
-            var card     = btn.closest('.order-card');
-            var badge    = card.querySelector('.order-status');
-            var labelMap = { pending: 'Pending', confirmed: 'Confirmed', completed: 'Completed' };
-            badge.textContent = labelMap[status];
-            badge.className   = 'order-status ' + status;
-            btn.textContent   = '✓';
-            setTimeout(function () { btn.textContent = 'Update'; btn.disabled = false; }, 1500);
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+        if (data.success) {
+            var card  = btn.closest('.order-card');
+            var badge = card.querySelector('.order-status');
+            badge.textContent = data.status_label;
+            badge.className   = 'order-status ' + data.status;
         } else {
-            btn.textContent = 'Error';
-            btn.disabled    = false;
+            alert('Status belum berhasil diupdate.');
         }
     })
     .catch(function () {
-        btn.textContent = 'Error';
-        btn.disabled    = false;
+        alert('Status belum berhasil diupdate. Coba lagi sebentar.');
+    })
+    .finally(function () {
+        btn.classList.remove('loading');
+        btn.disabled = false;
     });
 });
 
@@ -422,7 +427,6 @@ document.getElementById('btn-konfirmasi-hapus').addEventListener('click', functi
     var noMeja = _mejaToDelete;
     var btn    = this;
 
-    btn.textContent = 'Menghapus...';
     btn.disabled    = true;
 
     fetch('/admin/meja/' + encodeURIComponent(noMeja) + '/delete', {
@@ -451,13 +455,11 @@ document.getElementById('btn-konfirmasi-hapus').addEventListener('click', functi
             alert(data.message || 'Gagal menghapus meja.');
         }
 
-        btn.textContent = 'Ya, Hapus';
         btn.disabled    = false;
         _mejaToDelete   = null;
     })
     .catch(() => {
         alert('Terjadi kesalahan koneksi.');
-        btn.textContent = 'Ya, Hapus';
         btn.disabled    = false;
     });
 });

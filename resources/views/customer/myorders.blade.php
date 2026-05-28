@@ -20,7 +20,7 @@
 
         @foreach($orders as $order)
 
-        <div class="order-card">
+        <div class="order-card" data-order-id="{{ $order->id }}">
 
             <div class="top">
 
@@ -35,7 +35,15 @@
                 </div>
 
                 <div class="status {{ $order->status }}">
-                    {{ $order->status }}
+                    @if($order->status === 'pending')
+                        Menunggu konfirmasi
+                    @elseif($order->status === 'confirmed')
+                        Pesanan sedang diproses
+                    @elseif($order->status === 'completed')
+                        Pesanan telah diantarkan
+                    @else
+                        {{ ucfirst($order->status) }}
+                    @endif
                 </div>
 
             </div>
@@ -54,6 +62,10 @@
 
             </div>
 
+            <div class="review-note" @if($order->status !== 'completed') style="display:none;" @endif>
+                {{ $order->review ? 'Review sudah dikirim.' : 'Review tersedia di halaman konfirmasi pesanan terakhir.' }}
+            </div>
+
         </div>
 
         @endforeach
@@ -63,3 +75,43 @@
 </div>
 
 @endsection
+
+@push('custom_script')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    function refreshMyOrders() {
+        fetch('/my-orders/status', {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) return;
+
+                data.orders.forEach(order => {
+                    const card = document.querySelector('[data-order-id="' + order.id + '"]');
+                    if (!card) return;
+
+                    const badge = card.querySelector('.status');
+                    badge.textContent = order.status_label;
+                    badge.className = 'status ' + order.status;
+
+                    const note = card.querySelector('.review-note');
+                    if (order.status === 'completed') {
+                        note.textContent = order.reviewed ? 'Review sudah dikirim.' : 'Review tersedia di halaman konfirmasi pesanan terakhir.';
+                        note.style.display = 'block';
+                    } else {
+                        note.style.display = 'none';
+                    }
+                });
+            })
+            .catch(() => {});
+    }
+
+    refreshMyOrders();
+    setInterval(refreshMyOrders, 5000);
+});
+</script>
+@endpush

@@ -41,7 +41,10 @@ Route::post('/cart/remove', [CustomerController::class, 'removeFromCart']);
 Route::get('/checkout', [CustomerController::class, 'checkout']);
 Route::post('/checkout', [CustomerController::class, 'placeOrder']);
 Route::get('/order-confirmation', [CustomerController::class, 'orderConfirmation']);
+Route::get('/order-confirmation/status', [CustomerController::class, 'orderStatus']);
+Route::post('/order-confirmation/review', [CustomerController::class, 'storeReview']);
 Route::get('/my-orders', [CustomerController::class, 'myOrders']);
+Route::get('/my-orders/status', [CustomerController::class, 'myOrdersStatus']);
 
 // TABLE (QR Scan)
 Route::get('/table/end', [TableController::class, 'endSession']);
@@ -65,6 +68,7 @@ Route::get('/admin/manajemen-menu', [AdminController::class, 'manajemenMenu']);
 Route::post('/admin/manajemen-menu', [AdminController::class, 'storeMenu']);
 Route::put('/admin/manajemen-menu/{id}', [AdminController::class, 'updateMenu']);
 Route::delete('/admin/manajemen-menu/{id}', [AdminController::class, 'destroyMenu']);
+Route::get('/admin/reviews', [AdminController::class, 'reviews']);
 Route::get('/admin/analytics', [AdminController::class, 'analytics'])->name('admin.analytics');
 
 // KASIR

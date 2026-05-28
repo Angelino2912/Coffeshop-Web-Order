@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Session;
 use App\Models\Menu;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Review;
 
 class CustomerController extends Controller
 {
@@ -196,7 +197,7 @@ class CustomerController extends Controller
             return redirect('/menu')->with('error', 'Tidak ada pesanan yang dapat ditampilkan.');
         }
 
-        $order = Order::with('items.menu')->find($orderId);
+        $order = Order::with(['items.menu', 'review'])->find($orderId);
 
         if (!$order) {
             return redirect('/menu')->with('error', 'Pesanan tidak ditemukan.');
@@ -205,14 +206,107 @@ class CustomerController extends Controller
         return view('customer.order', ['order' => $order]);
     }
 
+    public function orderStatus()
+    {
+        $orderId = Session::get('last_order_id');
+
+        if (!$orderId) {
+            return response()->json(['success' => false, 'message' => 'Tidak ada pesanan aktif.'], 404);
+        }
+
+        $order = Order::with('review')->find($orderId);
+
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Pesanan tidak ditemukan.'], 404);
+        }
+
+        return response()->json([
+            'success'      => true,
+            'status'       => $order->status,
+            'status_label' => $this->orderStatusLabel($order->status),
+            'can_review'   => $order->status === 'completed' && !$order->review,
+            'reviewed'     => (bool) $order->review,
+        ]);
+    }
+
+    public function storeReview(Request $request)
+    {
+        $orderId = Session::get('last_order_id');
+
+        if (!$orderId) {
+            return response()->json(['success' => false, 'message' => 'Tidak ada pesanan aktif.'], 404);
+        }
+
+        $order = Order::with('review')->find($orderId);
+
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Pesanan tidak ditemukan.'], 404);
+        }
+
+        if ($order->status !== 'completed') {
+            return response()->json(['success' => false, 'message' => 'Review bisa dikirim setelah pesanan diantarkan.'], 422);
+        }
+
+        if ($order->review) {
+            return response()->json(['success' => false, 'message' => 'Review untuk pesanan ini sudah dikirim.'], 422);
+        }
+
+        $validated = $request->validate([
+            'rating'  => 'required|integer|min:1|max:5',
+            'comment' => 'nullable|string|max:500',
+        ]);
+
+        Review::create([
+            'order_id'      => $order->id,
+            'customer_name' => $order->customer_name,
+            'rating'        => $validated['rating'],
+            'comment'       => $validated['comment'] ?? null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Terima kasih, review kamu sudah terkirim.',
+        ]);
+    }
+
     public function myOrders()
     {
         if (!session('customer_name')) {
             return redirect('/')->with('error', 'Silakan scan QR meja terlebih dahulu');
         }
 
-        $orders = Order::where('customer_name', session('customer_name'))->latest()->get();
+        $orders = Order::with('review')->where('customer_name', session('customer_name'))->latest()->get();
 
         return view('customer.myorders', compact('orders'));
+    }
+
+    public function myOrdersStatus()
+    {
+        if (!session('customer_name')) {
+            return response()->json(['success' => false, 'message' => 'Sesi customer tidak ditemukan.'], 401);
+        }
+
+        $orders = Order::with('review')
+            ->where('customer_name', session('customer_name'))
+            ->latest()
+            ->get()
+            ->map(fn($order) => [
+                'id'           => $order->id,
+                'status'       => $order->status,
+                'status_label' => $this->orderStatusLabel($order->status),
+                'reviewed'     => (bool) $order->review,
+            ]);
+
+        return response()->json(['success' => true, 'orders' => $orders]);
+    }
+
+    private function orderStatusLabel(string $status): string
+    {
+        return match ($status) {
+            'pending'   => 'Menunggu konfirmasi',
+            'confirmed' => 'Pesanan sedang diproses',
+            'completed' => 'Pesanan telah diantarkan',
+            default     => ucfirst($status),
+        };
     }
 }

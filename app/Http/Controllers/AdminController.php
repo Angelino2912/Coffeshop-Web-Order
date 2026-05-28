@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Menu;
+use App\Models\Review;
 
 class AdminController extends Controller
 {
@@ -57,12 +58,25 @@ class AdminController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
+        $request->validate([
+            'status' => 'required|in:pending,confirmed,completed',
+        ]);
+
         $order         = Order::findOrFail($id);
         $order->status = $request->input('status');
         $order->save();
 
         if ($request->expectsJson() || $request->isXmlHttpRequest()) {
-            return response()->json(['success' => true, 'status' => $order->status]);
+            return response()->json([
+                'success'      => true,
+                'status'       => $order->status,
+                'status_label' => match ($order->status) {
+                    'pending'   => 'Pending',
+                    'confirmed' => 'Diproses',
+                    'completed' => 'Selesai',
+                    default     => ucfirst($order->status),
+                },
+            ]);
         }
 
         return back()->with('success', 'Status pesanan berhasil diupdate');
@@ -193,6 +207,13 @@ class AdminController extends Controller
         Menu::findOrFail($id)->delete();
 
         return back()->with('success', 'Menu berhasil dihapus!');
+    }
+
+    public function reviews()
+    {
+        $reviews = Review::with('order.items.menu')->latest()->get();
+
+        return view('admin.reviews', compact('reviews'));
     }
 
     public function analytics()

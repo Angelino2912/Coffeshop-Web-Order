@@ -41,12 +41,21 @@ body{
     background: orange;
 }
 
-.status.diproses{
+.status.confirmed{
     background: blue;
 }
 
-.status.selesai{
+.status.completed{
     background: green;
+}
+
+.review-note{
+    margin-top:14px;
+    padding:12px 14px;
+    border-radius:12px;
+    background:#eef7ee;
+    color:#246b2a;
+    font-weight:700;
 }
 
 .middle p{

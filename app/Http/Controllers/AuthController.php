@@ -11,29 +11,37 @@ use App\Models\Customer;
 class AuthController extends Controller
 {
     // ADMIN & KASIR LOGIN
-    public function adminLogin(Request $request)
-    {
-        $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required',
-        ]);
+public function adminLogin(Request $request)
+{
+    $request->validate([
+        'name'     => 'required',
+        'password' => 'required',
+    ]);
 
-        $admin = Admin::where('email', $request->email)->first();
+    $admin = \App\Models\Admin::where('name', $request->name)->first();
 
-        if ($admin && Hash::check($request->password, $admin->password)) {
-            Session::put('user', $admin);
-            Session::put('role', $admin->role);
-
-            return match($admin->role) {
-                'kasir' => redirect('/kasir/dashboard'),
-                'admin' => redirect('/admin'),
-                default => back()->with('error', 'Role tidak dikenali'),
-            };
+   if ($admin && $admin->password === $request->password) {
+        if ($admin->role === 'kasir') {
+            session([
+                'kasir_id' => $admin->id,
+                'role'     => 'kasir',
+                'name'     => $admin->name,
+            ]);
+            return redirect('/kasir/dashboard');
         }
 
-        return back()->with('error', 'Email atau password salah');
+        if ($admin->role === 'admin') {
+            session([
+                'admin_id' => $admin->id,
+                'role'     => 'admin',
+                'name'     => $admin->name,
+            ]);
+            return redirect('/admin/dashboard');
+        }
     }
 
+    return back()->withErrors(['name' => 'Nama atau password salah']);
+}
     // CUSTOMER (GUEST) — tidak diubah
     public function guestLogin(Request $request)
     {

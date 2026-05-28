@@ -4,9 +4,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\KasirController;
 use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\TableController;
+use App\Http\Controllers\KasirController;
 
 Route::get('/', function () {
     return view('auth.login');
@@ -23,10 +23,11 @@ Route::get('/login', function () {
 Route::post('/guest-login', [AuthController::class, 'guestLogin']);
 
 // ADMIN AUTH
-Route::get('/admin/login', function () {
-    return view('admin.login');
-});
-Route::post('/admin/login', [AuthController::class, 'adminLogin']);
+Route::get('/login-karyawan', function () {
+    return view('auth.login-karyawan');
+})->name('login.karyawan');
+
+Route::post('/login-karyawan', [AuthController::class, 'adminLogin']);
 
 // CUSTOMER PAGES
 Route::get('/dashboard', function () {
@@ -70,6 +71,10 @@ Route::put('/admin/manajemen-menu/{id}', [AdminController::class, 'updateMenu'])
 Route::delete('/admin/manajemen-menu/{id}', [AdminController::class, 'destroyMenu']);
 Route::get('/admin/reviews', [AdminController::class, 'reviews']);
 Route::get('/admin/analytics', [AdminController::class, 'analytics'])->name('admin.analytics');
+Route::post('/admin/logout', function () {
+    session()->forget(['admin_id', 'role', 'name']);
+    return redirect('/admin/login');
+})->name('admin.logout');
 
 // KASIR
 Route::get('/kasir/dashboard', [KasirController::class, 'dashboard']);
@@ -98,3 +103,15 @@ Route::get('/admin/force-generate-qr', function () {
 });
 
 Route::post('/admin/meja/{no_meja}/delete', [TableController::class, 'destroy']);
+
+Route::prefix('kasir')->group(function () {
+    Route::get('/dashboard', [KasirController::class, 'dashboard'])->name('kasir.dashboard');
+    Route::get('/meja/status', [KasirController::class, 'mejaStatus'])->name('kasir.meja.status');
+    Route::post('/meja/store', [KasirController::class, 'storeMeja'])->name('kasir.meja.store');
+    Route::post('/meja/{no_meja}/delete', [KasirController::class, 'destroyMeja'])->name('kasir.meja.destroy');
+    Route::post('/orders/{id}/status', [KasirController::class, 'updateStatus'])->name('kasir.orders.status');
+});
+Route::post('/kasir/logout', function () {
+    session()->forget(['kasir_id', 'role', 'name']);
+    return redirect('/admin/login');
+})->name('kasir.logout');

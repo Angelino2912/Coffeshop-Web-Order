@@ -14,15 +14,16 @@ class CustomerController extends Controller
     public function dashboard()
     {
         return view('customer.dashboard', [
-            'name' => session('customer_name') ?? 'Kamu',
-            'no_meja' => session('no_meja')
+            'name'    => session('customer_name') ?? 'Kamu',
+            'no_meja' => session('no_meja'),
         ]);
     }
 
     public function menu()
     {
-        if (!session('customer_name') || !session('no_meja')) {
-            return redirect('/')->with('error', 'Silakan scan QR meja terlebih dahulu');
+        // Bungkus/bawa pulang: boleh tanpa no_meja
+        if (!session('customer_name')) {
+            return redirect('/')->with('error', 'Silakan login atau scan QR meja terlebih dahulu');
         }
 
         $items = Menu::all();
@@ -32,8 +33,8 @@ class CustomerController extends Controller
 
     public function addToCart(Request $request)
     {
-        if (!session('customer_name') || !session('no_meja')) {
-            return redirect('/')->with('error', 'Silakan scan QR meja terlebih dahulu');
+        if (!session('customer_name')) {
+            return redirect('/')->with('error', 'Silakan login atau scan QR meja terlebih dahulu');
         }
 
         $request->validate([
@@ -68,8 +69,8 @@ class CustomerController extends Controller
 
     public function cart()
     {
-        if (!session('customer_name') || !session('no_meja')) {
-            return redirect('/')->with('error', 'Silakan scan QR meja terlebih dahulu');
+        if (!session('customer_name')) {
+            return redirect('/')->with('error', 'Silakan login atau scan QR meja terlebih dahulu');
         }
 
         $cart  = Session::get('customer_cart', []);
@@ -80,15 +81,14 @@ class CustomerController extends Controller
 
     public function updateCart(Request $request)
     {
-        // Support AJAX (JSON) dan form biasa
         if ($request->isJson()) {
             $data = $request->json()->all();
         } else {
             $data = $request->all();
         }
 
-        $itemId  = $data['item_id'] ?? null;
-        $qty     = $data['quantity'] ?? 0;
+        $itemId = $data['item_id'] ?? null;
+        $qty    = $data['quantity'] ?? 0;
 
         if (!$itemId) {
             return $request->isJson()
@@ -130,8 +130,8 @@ class CustomerController extends Controller
 
     public function checkout()
     {
-        if (!session('customer_name') || !session('no_meja')) {
-            return redirect('/')->with('error', 'Silakan scan QR meja terlebih dahulu');
+        if (!session('customer_name')) {
+            return redirect('/')->with('error', 'Silakan login atau scan QR meja terlebih dahulu');
         }
 
         $cart = Session::get('customer_cart', []);
@@ -146,14 +146,14 @@ class CustomerController extends Controller
             'cart'         => $cart,
             'total'        => $total,
             'customerName' => session('customer_name'),
-            'noMeja'       => session('no_meja'),
+            'noMeja'       => session('no_meja'), // bisa null kalau bungkus
         ]);
     }
 
     public function placeOrder(Request $request)
     {
-        if (!session('customer_name') || !session('no_meja')) {
-            return redirect('/')->with('error', 'Silakan scan QR meja terlebih dahulu');
+        if (!session('customer_name')) {
+            return redirect('/')->with('error', 'Silakan login atau scan QR meja terlebih dahulu');
         }
 
         $request->validate(['note' => 'nullable|string|max:500']);
@@ -166,9 +166,10 @@ class CustomerController extends Controller
 
         $total = collect($cart)->reduce(fn($total, $item) => $total + ($item['price'] * $item['quantity']), 0);
 
+        // no_meja null = bungkus/bawa pulang, tidak perlu meja
         $order = Order::create([
             'customer_name' => session('customer_name'),
-            'table_number'  => session('no_meja'),
+            'table_number'  => session('no_meja') ?? null,
             'note'          => $request->note,
             'total'         => $total,
             'status'        => 'pending',
@@ -275,7 +276,10 @@ class CustomerController extends Controller
             return redirect('/')->with('error', 'Silakan scan QR meja terlebih dahulu');
         }
 
-        $orders = Order::with('review')->where('customer_name', session('customer_name'))->latest()->get();
+        $orders = Order::with('review')
+            ->where('customer_name', session('customer_name'))
+            ->latest()
+            ->get();
 
         return view('customer.myorders', compact('orders'));
     }

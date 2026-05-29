@@ -26,7 +26,11 @@
 
                 <div>
                     <h2>
-                        Meja {{ $order->table_number }}
+                        @if($order->table_number)
+                            Meja {{ $order->table_number }}
+                        @else
+                            Bungkus / Bawa Pulang
+                        @endif
                     </h2>
 
                     <p>

@@ -16,20 +16,20 @@ Route::get('/home', function () {
     return redirect('dashboard');
 });
 
-// CUSTOMER
+// ─── CUSTOMER AUTH ────────────────────────────────────────────────────────────
 Route::get('/login', function () {
     return view('auth.login');
 });
 Route::post('/guest-login', [AuthController::class, 'guestLogin']);
 
-// ADMIN AUTH
+// ─── ADMIN AUTH ───────────────────────────────────────────────────────────────
 Route::get('/login-karyawan', function () {
     return view('auth.login-karyawan');
 })->name('login.karyawan');
 
 Route::post('/login-karyawan', [AuthController::class, 'adminLogin']);
 
-// CUSTOMER PAGES
+// ─── CUSTOMER PAGES ───────────────────────────────────────────────────────────
 Route::get('/dashboard', function () {
     $user = Session::get('user');
     return view('customer.dashboard', compact('user'));
@@ -47,15 +47,15 @@ Route::post('/order-confirmation/review', [CustomerController::class, 'storeRevi
 Route::get('/my-orders', [CustomerController::class, 'myOrders']);
 Route::get('/my-orders/status', [CustomerController::class, 'myOrdersStatus']);
 
-// TABLE (QR Scan)
+// ─── TABLE (QR Scan) ──────────────────────────────────────────────────────────
 Route::get('/table/end', [TableController::class, 'endSession']);
 Route::post('/table/confirm', [TableController::class, 'confirm']);
 Route::get('/table/{qr}', [TableController::class, 'scan']);
 
-// ADMIN
+// ─── ADMIN ────────────────────────────────────────────────────────────────────
 Route::get('/admin', function () {
     if (session('role') !== 'admin') {
-        return redirect('/admin/login'); // ← fix: arahkan ke admin login
+        return redirect('/admin/login');
     }
     return redirect('/admin/dashboard');
 });
@@ -71,17 +71,41 @@ Route::put('/admin/manajemen-menu/{id}', [AdminController::class, 'updateMenu'])
 Route::delete('/admin/manajemen-menu/{id}', [AdminController::class, 'destroyMenu']);
 Route::get('/admin/reviews', [AdminController::class, 'reviews']);
 Route::get('/admin/analytics', [AdminController::class, 'analytics'])->name('admin.analytics');
+Route::post('/admin/meja/{no_meja}/delete', [TableController::class, 'destroy']);
 Route::post('/admin/logout', function () {
     session()->forget(['admin_id', 'role', 'name']);
     return redirect('/admin/login');
 })->name('admin.logout');
 
-// KASIR
-Route::get('/kasir/dashboard', [KasirController::class, 'dashboard']);
-Route::post('/kasir/meja/store', [KasirController::class, 'storeMeja']);
-Route::post('/kasir/orders/{id}/status', [KasirController::class, 'updateStatus']);
+// ─── KASIR ────────────────────────────────────────────────────────────────────
+Route::prefix('kasir')->name('kasir.')->group(function () {
+    // Dashboard
+    Route::get('/dashboard', [KasirController::class, 'dashboard'])->name('dashboard');
 
-// TEMPORARY UTILITY ROUTES (hapus setelah dipakai)
+    // Meja
+    Route::get('/meja', [KasirController::class, 'mejaIndex'])->name('meja');
+    Route::get('/meja/status', [KasirController::class, 'mejaStatus'])->name('meja.status');
+    Route::post('/meja/store', [KasirController::class, 'storeMeja'])->name('meja.store');
+    Route::post('/meja/{no_meja}/delete', [KasirController::class, 'destroyMeja'])->name('meja.destroy');
+
+    // Orders
+    Route::get('/orders', [KasirController::class, 'ordersIndex'])->name('orders');
+    Route::post('/orders', [KasirController::class, 'storeOrder'])->name('orders.store');
+    Route::post('/orders/{id}/status', [KasirController::class, 'updateStatus'])->name('orders.status');
+    Route::delete('/orders/{id}', [KasirController::class, 'destroy'])->name('orders.destroy');
+
+    // Pembayaran
+    Route::get('/pembayaran/{id}', [KasirController::class, 'pembayaran'])->name('pembayaran');
+    Route::get('/payment/{id}', [KasirController::class, 'pembayaran'])->name('payment.show');
+    Route::post('/pembayaran/{id}/process', [KasirController::class, 'processPayment'])->name('payment.process');
+});
+
+Route::post('/kasir/logout', function () {
+    session()->forget(['kasir_id', 'role', 'name']);
+    return redirect('/admin/login');
+})->name('kasir.logout');
+
+// ─── TEMPORARY UTILITY (hapus setelah dipakai) ───────────────────────────────
 Route::get('/admin/fix-qr', function () {
     \App\Models\Meja::all()->each(function ($meja) {
         if (!$meja->qr_uuid) {
@@ -95,23 +119,9 @@ Route::get('/admin/fix-qr', function () {
 Route::get('/admin/force-generate-qr', function () {
     $mejas = \App\Models\Meja::all();
     foreach ($mejas as $meja) {
-        $url = url('/table/' . $meja->qr_uuid);
+        $url     = url('/table/' . $meja->qr_uuid);
         $qrImage = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(300)->generate($url);
         \Illuminate\Support\Facades\Storage::disk('public')->put('qr/meja_' . $meja->no_meja . '.svg', $qrImage);
     }
     return 'QR semua meja berhasil digenerate';
 });
-
-Route::post('/admin/meja/{no_meja}/delete', [TableController::class, 'destroy']);
-
-Route::prefix('kasir')->group(function () {
-    Route::get('/dashboard', [KasirController::class, 'dashboard'])->name('kasir.dashboard');
-    Route::get('/meja/status', [KasirController::class, 'mejaStatus'])->name('kasir.meja.status');
-    Route::post('/meja/store', [KasirController::class, 'storeMeja'])->name('kasir.meja.store');
-    Route::post('/meja/{no_meja}/delete', [KasirController::class, 'destroyMeja'])->name('kasir.meja.destroy');
-    Route::post('/orders/{id}/status', [KasirController::class, 'updateStatus'])->name('kasir.orders.status');
-});
-Route::post('/kasir/logout', function () {
-    session()->forget(['kasir_id', 'role', 'name']);
-    return redirect('/admin/login');
-})->name('kasir.logout');

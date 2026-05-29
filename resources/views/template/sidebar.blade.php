@@ -11,13 +11,13 @@
             </a>
         </li>
         <li>
-            <a href="/admin/manajemen-menu" class="{{ request()->is('admin/manajemen-menu*') ? 'active' : '' }}">
-                <i class="bi bi-cup-hot"></i> Manajemen Menu
+            <a href="/admin/manajemen-meja" class="{{ request()->is('admin/manajemen-meja*') ? 'active' : '' }}">
+                <i class="bi bi-grid-3x3-gap"></i> Manajemen Meja
             </a>
         </li>
         <li>
-            <a href="/admin/orders" class="{{ request()->is('admin/orders*') ? 'active' : '' }}">
-                <i class="bi bi-card-list"></i> Order List
+            <a href="/admin/manajemen-menu" class="{{ request()->is('admin/manajemen-menu*') ? 'active' : '' }}">
+                <i class="bi bi-cup-hot"></i> Manajemen Menu
             </a>
         </li>
         <li>
@@ -27,8 +27,18 @@
         </li>
         <li>
             <a href="/admin/reviews" class="{{ request()->is('admin/reviews*') ? 'active' : '' }}">
-                <i class="bi bi-pencil"></i> Reviews
+                <i class="bi bi-pencil"></i> Review
             </a>
         </li>
     </ul>
+
+    <div class="logout-area">
+        <a href="/admin/login"
+           onclick="event.preventDefault(); document.getElementById('admin-logout-form').submit();">
+            <i class="bi bi-box-arrow-left"></i> Logout
+        </a>
+        <form id="admin-logout-form" action="{{ route('admin.logout') }}" method="POST" style="display:none;">
+            @csrf
+        </form>
+    </div>
 </div>

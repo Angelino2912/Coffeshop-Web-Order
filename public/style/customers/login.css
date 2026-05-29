@@ -84,6 +84,31 @@ button:hover {
     background: #5C3A21;
 }
 
+.qr-note {
+    color: #5C3A21;
+    font-size: 15px;
+    line-height: 1.7;
+    margin-bottom: 22px;
+}
+
+.staff-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    padding: 12px;
+    border-radius: 10px;
+    background: #a86a2c;
+    color: white;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.staff-link:hover {
+    background: #5C3A21;
+    color: white;
+}
+
 .error {
     background: #ffdddd;
     color: red;

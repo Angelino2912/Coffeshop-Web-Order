@@ -15,12 +15,11 @@
 
 @section('content')
 <div class="box">
-    <a href="/dashboard" class="back-link">&larr; Kembali ke Dashboard</a>
+    <a href="/menu" class="back-link">&larr; Kembali ke Menu</a>
     <h1>Pesanan Berhasil Dikonfirmasi</h1>
     <p>Terima kasih! Pesananmu sudah tersimpan dan bisa dibayar sekarang.</p>
 
     <div class="summary">
-        <div class="field"><strong>Nama:</strong> {{ $order->customer_name }}</div>
         <div class="field"><strong>Nomor Meja:</strong> {{ $order->table_number }}</div>
         <div class="field"><strong>Catatan:</strong> {{ $order->note ?: '-' }}</div>
         <div class="field status-row">

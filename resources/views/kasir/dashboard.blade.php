@@ -8,6 +8,9 @@
 
 @section('content')
 
+@if(session('success'))
+    <div class="alert alert-success">{{ session('success') }}</div>
+@endif
 
 {{-- Main Grid --}}
 <div class="dashboard-grid">
@@ -19,10 +22,13 @@
         <div class="meja-status-section">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                 <h2 style="margin:0; font-size:16px; font-weight:700; color:#3d2b1f;">Status Meja</h2>
-                <button data-bs-toggle="modal" data-bs-target="#modalTambahMeja"
-                    style="background:#9b632c; color:#fff; border:none; border-radius:10px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px;">
-                    <i class="bi bi-plus-circle"></i> Tambah Meja
-                </button>
+                <form method="POST" action="{{ route('kasir.meja.generate-qr') }}">
+                    @csrf
+                    <button type="submit"
+                        style="background:#9b632c; color:#fff; border:none; border-radius:10px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                        <i class="bi bi-qr-code"></i> Generate QR
+                    </button>
+                </form>
             </div>
 
             <div class="meja-status-grid" id="mejaStatusGrid">
@@ -59,13 +65,6 @@
                     <button class="btn-barcode"
                         onclick="showBarcode('{{ $meja->no_meja }}', '{{ $meja->qr_uuid }}')">
                         <i class="bi bi-qr-code"></i> Tampilkan barcode
-                    </button>
-                    <button class="btn-delete-meja"
-                        onclick="deleteMeja('{{ $meja->no_meja }}', '{{ $mejaStatus }}')"
-                        {{ $mejaStatus !== 'kosong' ? 'disabled' : '' }}
-                        title="{{ $mejaStatus !== 'kosong' ? 'Meja sedang digunakan' : 'Hapus meja ini' }}">
-                        <i class="bi bi-trash"></i>
-                        {{ $mejaStatus !== 'kosong' ? 'Sedang digunakan' : 'Hapus Meja' }}
                     </button>
                 </div>
                 @endforeach
@@ -133,61 +132,6 @@
 
 </div>
 
-{{-- Modal Tambah Meja --}}
-<div class="modal fade" id="modalTambahMeja" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius:16px; padding:8px;">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold">Tambah Meja</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body pt-3">
-                <form method="POST" action="{{ route('kasir.meja.store') }}">
-                    @csrf
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Nomor Meja</label>
-                        <input type="text" name="no_meja" class="form-control"
-                               placeholder="Contoh: A1" required
-                               style="border-radius:10px; padding:10px 14px;">
-                    </div>
-                    <div class="d-flex justify-content-end gap-2 mt-4">
-                        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal"
-                                style="border-radius:10px;">Batal</button>
-                        <button type="submit" class="btn px-4 text-white"
-                                style="background:#9b632c; border-radius:10px;">Simpan</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-{{-- Modal Konfirmasi Hapus Meja --}}
-<div class="modal fade" id="modalKonfirmasiHapus" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content" style="border-radius:16px; padding:8px; text-align:center;">
-            <div class="modal-body pt-4 pb-2">
-                <div style="font-size:40px; color:#e74c3c; margin-bottom:12px;">
-                    <i class="bi bi-exclamation-triangle-fill"></i>
-                </div>
-                <h5 class="fw-bold" style="color:#3d2b1f; margin-bottom:8px;">Hapus Meja?</h5>
-                <p style="color:#8a6a54; font-size:13px; margin-bottom:20px;">
-                    Meja <strong id="konfirmasi-meja-no"></strong> akan dihapus permanen.<br>
-                    Tindakan ini tidak bisa dibatalkan.
-                </p>
-                <div class="d-flex gap-2 justify-content-center mb-2">
-                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal"
-                            style="border-radius:10px; font-size:13px;">Batal</button>
-                    <button type="button" id="btn-konfirmasi-hapus" class="btn px-4 text-white"
-                            style="background:#e74c3c; border-radius:10px; font-size:13px;">
-                        Ya, Hapus
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 {{-- Modal Barcode --}}
 <div class="modal fade" id="modalBarcode" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -218,7 +162,9 @@
 <script>
 
 // ─── Chart Bar Mingguan ───────────────────────────────────────────────────────
-const barCtx = document.getElementById('barChart').getContext('2d');
+const barCanvas = document.getElementById('barChart');
+if (barCanvas) {
+const barCtx = barCanvas.getContext('2d');
 new Chart(barCtx, {
     type: 'bar',
     data: {
@@ -236,9 +182,12 @@ new Chart(barCtx, {
         scales: { y: { beginAtZero: true } }
     }
 });
+}
 
 // ─── Chart Pie Kategori ───────────────────────────────────────────────────────
-const pieCtx = document.getElementById('pieChart').getContext('2d');
+const pieCanvas = document.getElementById('pieChart');
+if (pieCanvas) {
+const pieCtx = pieCanvas.getContext('2d');
 new Chart(pieCtx, {
     type: 'doughnut',
     data: {
@@ -253,6 +202,7 @@ new Chart(pieCtx, {
         plugins: { legend: { display: false } }
     }
 });
+}
 
 // ─── Barcode Modal ────────────────────────────────────────────────────────────
 function showBarcode(noMeja, uuid) {
@@ -321,61 +271,6 @@ document.addEventListener('click', function (e) {
 });
 
 // ─── Delete Meja ─────────────────────────────────────────────────────────────
-var _mejaToDelete = null;
-
-function deleteMeja(noMeja, status) {
-    if (status !== 'kosong') {
-        alert('Meja sedang digunakan, tidak bisa dihapus.');
-        return;
-    }
-
-    _mejaToDelete = noMeja;
-    document.getElementById('konfirmasi-meja-no').textContent = noMeja;
-
-    new bootstrap.Modal(document.getElementById('modalKonfirmasiHapus')).show();
-}
-
-document.getElementById('btn-konfirmasi-hapus').addEventListener('click', function () {
-    if (!_mejaToDelete) return;
-
-    var noMeja = _mejaToDelete;
-    var btn    = this;
-
-    btn.disabled = true;
-
-    fetch('/kasir/meja/' + encodeURIComponent(noMeja) + '/delete', {
-        method: 'POST',
-        headers: {
-            'Content-Type' : 'application/json',
-            'X-CSRF-TOKEN' : '{{ csrf_token() }}'
-        }
-    })
-    .then(res => res.json())
-    .then(data => {
-        var modalEl = document.getElementById('modalKonfirmasiHapus');
-        bootstrap.Modal.getInstance(modalEl)?.hide();
-
-        if (data.success) {
-            var box = document.querySelector('[data-meja="' + noMeja + '"]');
-            if (box) {
-                box.style.transition = 'opacity 0.3s, transform 0.3s';
-                box.style.opacity    = '0';
-                box.style.transform  = 'scale(0.85)';
-                setTimeout(() => box.remove(), 300);
-            }
-        } else {
-            alert(data.message || 'Gagal menghapus meja.');
-        }
-
-        btn.disabled  = false;
-        _mejaToDelete = null;
-    })
-    .catch(() => {
-        alert('Terjadi kesalahan koneksi.');
-        btn.disabled = false;
-    });
-});
-
 // ─── Polling Status Meja tiap 5 detik ────────────────────────────────────────
 function pollMejaStatus() {
     fetch('/kasir/meja/status')
@@ -412,21 +307,6 @@ function pollMejaStatus() {
                         "showBarcode('" + meja.no_meja + "', '" + (meja.qr_uuid || '') + "')");
                 }
 
-                var deleteBtn = box.querySelector('.btn-delete-meja');
-                if (deleteBtn) {
-                    if (meja.status === 'kosong') {
-                        deleteBtn.disabled  = false;
-                        deleteBtn.title     = 'Hapus meja ini';
-                        deleteBtn.innerHTML = '<i class="bi bi-trash"></i> Hapus Meja';
-                        deleteBtn.setAttribute('onclick',
-                            "deleteMeja('" + meja.no_meja + "', 'kosong')");
-                    } else {
-                        deleteBtn.disabled  = true;
-                        deleteBtn.title     = 'Meja sedang digunakan';
-                        deleteBtn.innerHTML = '<i class="bi bi-trash"></i> Sedang digunakan';
-                        deleteBtn.setAttribute('onclick', '');
-                    }
-                }
             });
         })
         .catch(err => console.warn('Polling gagal:', err));

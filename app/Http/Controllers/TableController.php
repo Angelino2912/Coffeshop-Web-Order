@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Meja;
 use App\Models\TableSession;
 use Illuminate\Support\Facades\DB;
@@ -31,7 +30,7 @@ class TableController extends Controller
                 'customer_name' => $activeSession->customer_name,
                 'session_uuid'  => $activeSession->session_uuid,
             ]);
-            return redirect('/dashboard');
+            return redirect('/menu');
         }
 
         // Jika tidak ada session aktif, buat session baru secara otomatis
@@ -74,64 +73,7 @@ class TableController extends Controller
             'session_uuid'  => $session->session_uuid,
         ]);
 
-        return redirect('/dashboard')->with('success', 'Selamat datang di meja ' . $meja->no_meja);
-    }
-
-    public function confirm(Request $request)
-    {
-        $request->validate([
-            'customer_name' => 'required|string|max:255',
-            'meja_id'       => 'required|exists:meja,id'
-        ]);
-
-        $meja = Meja::findOrFail($request->meja_id);
-
-        // cari session aktif
-        $activeSession = TableSession::where('meja_id', $meja->id)
-            ->where('status', 'active')
-            ->first();
-
-        if ($activeSession) {
-            session([
-                'meja_id'       => $meja->id,
-                'no_meja'       => $meja->no_meja,
-                'customer_name' => $request->customer_name,
-                'session_uuid'  => $activeSession->session_uuid,
-            ]);
-            return redirect('/dashboard')->with('success', 'Selamat datang kembali di meja ' . $meja->no_meja);
-        }
-
-        try {
-            $session = DB::transaction(function () use ($meja, $request) {
-                $existing = TableSession::where('meja_id', $meja->id)
-                    ->where('status', 'active')
-                    ->lockForUpdate()
-                    ->first();
-
-                if ($existing) {
-                    return $existing;
-                }
-
-                return TableSession::create([
-                    'meja_id'       => $meja->id,
-                    'session_uuid'  => (string) Str::uuid(),
-                    'customer_name' => $request->customer_name,
-                    'status'        => 'active',
-                    'started_at'    => now(),
-                ]);
-            });
-        } catch (\Exception $e) {
-            return redirect('/')->with('error', $e->getMessage());
-        }
-
-        session([
-            'meja_id'       => $meja->id,
-            'no_meja'       => $meja->no_meja,
-            'customer_name' => $request->customer_name,
-            'session_uuid'  => $session->session_uuid,
-        ]);
-
-        return redirect('/dashboard')->with('success', 'Selamat datang di meja ' . $meja->no_meja);
+        return redirect('/menu')->with('success', 'Selamat datang di meja ' . $meja->no_meja);
     }
 
     public function endSession()

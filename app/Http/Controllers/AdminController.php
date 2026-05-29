@@ -5,8 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use App\Models\Meja;
-use Illuminate\Support\Str;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Menu;
 use App\Models\Review;
@@ -24,13 +22,9 @@ class AdminController extends Controller
 
     public function dashboard()
     {
-        $mejas = Meja::all();
+        $mejas = Meja::orderByRaw('CAST(no_meja AS UNSIGNED), no_meja')->get();
 
         $ordersToday = Order::whereDate('created_at', today())->get();
-
-        $orders = Order::with('items.menu')
-                       ->orderBy('id', 'desc')
-                       ->get();
 
         $weeklyLabels = [];
         $weeklyData   = [];
@@ -41,19 +35,25 @@ class AdminController extends Controller
         }
 
         $categoryData = [
-            (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->where('category', 'makanan'))->sum('quantity'),
-            (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->where('category', 'minuman'))->sum('quantity'),
-            (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->where('category', 'snack'))->sum('quantity'),
+            (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->whereIn('category', ['makanan', 'Makanan']))->sum('quantity'),
+            (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->whereIn('category', ['minuman', 'Minuman']))->sum('quantity'),
+            (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->whereIn('category', ['snack', 'Snack']))->sum('quantity'),
         ];
 
         return view('admin.dashboard', compact(
             'mejas',
-            'orders',
             'ordersToday',
             'weeklyLabels',
             'weeklyData',
             'categoryData',
         ));
+    }
+
+    public function manajemenMeja()
+    {
+        $mejas = Meja::orderByRaw('CAST(no_meja AS UNSIGNED), no_meja')->get();
+
+        return view('admin.manajemen-meja', compact('mejas'));
     }
 
     public function updateStatus(Request $request, $id)
@@ -82,72 +82,27 @@ class AdminController extends Controller
         return back()->with('success', 'Status pesanan berhasil diupdate');
     }
 
-    public function generateQr()
-    {
-        $mejas = Meja::all();
-
-        foreach ($mejas as $meja) {
-            if (!$meja->qr_uuid) {
-                $meja->qr_uuid = Str::uuid();
-                $meja->save();
-            }
-
-            $url      = url('/table/' . $meja->qr_uuid);
-            $qrImage  = QrCode::format('svg')->size(300)->generate($url);
-            $fileName = 'qr/meja_' . $meja->no_meja . '.svg';
-
-            Storage::disk('public')->put($fileName, $qrImage);
-        }
-
-        return redirect()->back()->with('success', 'QR semua meja berhasil digenerate');
-    }
-
     public function storeMeja(Request $request)
     {
-        $request->validate([
-            'no_meja' => 'required|unique:meja,no_meja'
+        $data = $request->validate([
+            'no_meja_awal' => 'required|integer|min:1',
+            'jumlah_meja'  => 'required|integer|min:1|max:100',
         ]);
 
-        $meja          = new Meja();
-        $meja->no_meja = $request->no_meja;
-        $meja->qr_uuid = Str::uuid();
-        $meja->save();
+        $dibuat = 0;
 
-        $url     = url('/table/' . $meja->qr_uuid);
-        $qrImage = QrCode::format('svg')->size(300)->generate($url);
-        Storage::disk('public')->put('qr/meja_' . $meja->no_meja . '.svg', $qrImage);
+        for ($i = 0; $i < $data['jumlah_meja']; $i++) {
+            $noMeja = (string) ($data['no_meja_awal'] + $i);
 
-        return back()->with('success', 'Meja berhasil ditambahkan & QR otomatis digenerate');
-    }
-
-    public function mejaStatus()
-    {
-        $mejas = Meja::all()->map(function ($meja) {
-            $activeOrder = Order::where('table_number', $meja->no_meja)
-                ->whereIn('status', ['pending', 'confirmed'])
-                ->latest()
-                ->first();
-
-            if ($activeOrder && $activeOrder->status === 'confirmed') {
-                $status       = 'aktif';
-                $customerName = $activeOrder->customer_name;
-            } elseif ($activeOrder && $activeOrder->status === 'pending') {
-                $status       = 'pending';
-                $customerName = $activeOrder->customer_name;
-            } else {
-                $status       = 'kosong';
-                $customerName = null;
+            if (Meja::where('no_meja', $noMeja)->exists()) {
+                continue;
             }
 
-            return [
-                'no_meja'       => $meja->no_meja,
-                'qr_uuid'       => $meja->qr_uuid,
-                'status'        => $status,
-                'customer_name' => $customerName,
-            ];
-        });
+            Meja::create(['no_meja' => $noMeja]);
+            $dibuat++;
+        }
 
-        return response()->json($mejas);
+        return back()->with('success', $dibuat . ' meja berhasil ditambahkan');
     }
 
     public function manajemenMenu()
@@ -244,9 +199,9 @@ class AdminController extends Controller
         }
 
         $categoryData = [
-            (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->where('category', 'makanan'))->sum('quantity'),
-            (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->where('category', 'minuman'))->sum('quantity'),
-            (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->where('category', 'snack'))->sum('quantity'),
+            (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->whereIn('category', ['makanan', 'Makanan']))->sum('quantity'),
+            (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->whereIn('category', ['minuman', 'Minuman']))->sum('quantity'),
+            (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->whereIn('category', ['snack', 'Snack']))->sum('quantity'),
         ];
 
         $topMenus = \App\Models\OrderItem::with('menu')

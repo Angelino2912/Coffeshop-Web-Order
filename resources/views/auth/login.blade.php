@@ -12,41 +12,18 @@
     </div>
 
     <div class="login-right">
-        <h2>Masuk Pelanggan</h2>
+        <h2>Scan QR Meja</h2>
 
         @if($errors->any())
             <div class="error">
                 {{ $errors->first() }}
             </div>
         @endif
-        <form method="POST" action="/table/confirm">
-            @csrf
-
-            <label>Masukkan nama Anda</label>
-            <input type="text" name="customer_name" placeholder="Nama Anda" required>
-            @if(isset($meja))
-                <p style="margin-bottom: 15px; color: #5C3A21;">Anda berada di meja no <strong>{{ $meja->no_meja }}</strong></p>
-                <input type="hidden" name="meja_id" value="{{ $meja->id }}">
-            @else
-                <label>Pilih Nomor Meja</label>
-                <select name="meja_id" required>
-                    <option value="">-- Pilih Meja Anda --</option>
-                    @foreach($mejas as $m)
-                        <option value="{{ $m->id }}">Meja {{ $m->no_meja }}</option>
-                    @endforeach
-                </select>
-            @endif
-
-            <button type="submit">Mulai Pesan</button>
-        </form>
-        <!-- <form action="/guest-login" method="POST">
-            @csrf
-
-            <input type="text" name="nama" placeholder="Nama Anda" required>
-            <input type="number" name="no_meja" placeholder="Nomor Meja" required>
-
-            <button type="submit">Mulai Pesan</button>
-        </form> -->
+        <p class="qr-note">
+            Pelanggan hanya bisa masuk melalui QR code yang tersedia di meja.
+            Setelah QR dipindai, nomor meja akan terbaca otomatis dan menu langsung terbuka.
+        </p>
+        <a href="/admin/login" class="staff-link">Masuk Admin / Kasir</a>
 
     </div>
 

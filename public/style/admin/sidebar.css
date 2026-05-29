@@ -68,3 +68,25 @@
 .menu li a i {
     color: #5c3517;
 }
+
+.logout-area {
+    margin-top: auto;
+    padding-top: 24px;
+}
+
+.logout-area a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    color: #5c3517;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 15px;
+    transition: background 0.2s;
+}
+
+.logout-area a:hover {
+    background-color: rgba(168, 106, 44, 0.15);
+}

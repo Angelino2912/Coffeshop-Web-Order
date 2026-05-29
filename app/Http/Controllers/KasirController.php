@@ -2,24 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Meja;
 use App\Models\Order;
 use Illuminate\Http\Request;
-use App\Models\Meja;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
-use Illuminate\Support\Facades\Storage;
 
 class KasirController extends Controller
 {
     public function dashboard()
     {
-        $mejas = Meja::all();
+        $mejas = Meja::orderByRaw('CAST(no_meja AS UNSIGNED), no_meja')->get();
 
         $orders = Order::with('items.menu')
-                       ->orderBy('id', 'desc')
-                       ->get();
+            ->orderBy('id', 'desc')
+            ->get();
 
-        // Data chart mingguan
         $weeklyLabels = [];
         $weeklyData   = [];
         for ($i = 6; $i >= 0; $i--) {
@@ -28,7 +27,6 @@ class KasirController extends Controller
             $weeklyData[]   = (int) Order::whereDate('created_at', $date)->sum('total');
         }
 
-        // Data chart kategori
         $categoryData = [
             (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->where('category', 'makanan'))->sum('quantity'),
             (int) \App\Models\OrderItem::whereHas('menu', fn($q) => $q->where('category', 'minuman'))->sum('quantity'),
@@ -100,29 +98,23 @@ class KasirController extends Controller
         return back()->with('success', 'Status pesanan berhasil diupdate');
     }
 
-    public function storeMeja(Request $request)
+    public function generateQr()
     {
-        $request->validate([
-            'no_meja' => 'required|unique:meja,no_meja'
-        ]);
+        $mejas = Meja::all();
 
-        $meja          = new Meja();
-        $meja->no_meja = $request->no_meja;
-        $meja->qr_uuid = Str::uuid();
-        $meja->save();
+        foreach ($mejas as $meja) {
+            if (!$meja->qr_uuid) {
+                $meja->qr_uuid = Str::uuid();
+                $meja->save();
+            }
 
-        $url     = url('/table/' . $meja->qr_uuid);
-        $qrImage = QrCode::format('svg')->size(300)->generate($url);
-        Storage::disk('public')->put('qr/meja_' . $meja->no_meja . '.svg', $qrImage);
+            $url      = url('/table/' . $meja->qr_uuid);
+            $qrImage  = QrCode::format('svg')->size(300)->generate($url);
+            $fileName = 'qr/meja_' . $meja->no_meja . '.svg';
 
-        return back()->with('success', 'Meja berhasil ditambahkan & QR otomatis digenerate');
-    }
+            Storage::disk('public')->put($fileName, $qrImage);
+        }
 
-    public function destroyMeja($no_meja) // ← fix: pakai no_meja bukan id
-    {
-        $meja = Meja::where('no_meja', $no_meja)->firstOrFail();
-        $meja->delete();
-
-        return response()->json(['success' => true]);
+        return back()->with('success', 'QR semua meja berhasil digenerate');
     }
 }

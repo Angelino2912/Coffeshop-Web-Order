@@ -8,13 +8,23 @@
 
 <div class="hero-bg"></div>
 
-<div class="container">
+<div class="menu-layout">
+    <aside class="sidebar-nav">
+        <div class="brand">
+            <h1>Cafe</h1>
+            <p>Cinta Rasa</p>
+        </div>
 
-    <div class="nav">
-        <a href="/dashboard">Dashboard</a>
-        <a href="/cart">Keranjang</a>
-        <a href="/checkout">Checkout</a>
-    </div>
+        <div class="table-pill">Meja {{ session('no_meja') }}</div>
+
+        <nav>
+            <a href="/menu" class="active"><i class="bi bi-grid"></i> Menu</a>
+            <a href="/cart"><i class="bi bi-bag"></i> Keranjang</a>
+            <a href="/checkout"><i class="bi bi-receipt"></i> Checkout</a>
+        </nav>
+    </aside>
+
+    <div class="container">
 
     @if(session('success'))
         <div class="alert success">{{ session('success') }}</div>
@@ -30,8 +40,7 @@
             <i class="bi bi-search"></i>
         </div>
         <div class="category-filters">
-            <button type="button" class="filter-btn active" data-category="all">Semua</button>
-            <button type="button" class="filter-btn" data-category="Makanan">Makanan</button>
+            <button type="button" class="filter-btn active" data-category="Makanan">Makanan</button>
             <button type="button" class="filter-btn" data-category="Minuman">Minuman</button>
         </div>
     </div>
@@ -39,6 +48,18 @@
     {{-- MAKANAN --}}
     <div class="kelompok" data-group-category="Makanan">
         <h2>Makanan</h2>
+        <details class="order-guide">
+            <summary>
+                <span>Cara Pesan</span>
+                <strong>Baca selengkapnya</strong>
+            </summary>
+            <ol>
+                <li>Pilih menu makanan atau minuman.</li>
+                <li>Tambahkan item ke keranjang.</li>
+                <li>Periksa keranjang lalu checkout.</li>
+                <li>Tambahkan catatan jika perlu, kemudian konfirmasi pesanan.</li>
+            </ol>
+        </details>
         <div class="menu">
             @foreach($items as $item)
                 @if($item->category == 'Makanan')
@@ -96,6 +117,7 @@
         </div>
     </div>
 
+    </div>
 </div>
 @endsection
 
@@ -152,6 +174,8 @@ document.addEventListener('DOMContentLoaded', function() {
             filterMenu();
         });
     });
+
+    filterMenu();
 });
 </script>
 @endpush

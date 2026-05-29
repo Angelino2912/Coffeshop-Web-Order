@@ -1,21 +1,24 @@
 <?php
 
-use App\Http\Controllers\KasirController;
-use Illuminate\Support\Facades\Route;
+namespace App\Models;
 
-Route::prefix('kasir')->middleware(['auth', 'role:kasir'])->group(function () {
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
-    // Dashboard utama kasir (Status Meja + Order Masuk)
-    Route::get('/dashboard', [KasirController::class, 'dashboard'])->name('kasir.dashboard');
+class Kasir extends Model
+{
+    use HasFactory;
 
-    // Status meja (JSON polling untuk update realtime)
-    Route::get('/meja-status', [KasirController::class, 'mejaStatus'])->name('kasir.meja.status');
+    protected $table = 'kasirs';
 
-    // Tambah & hapus meja
-    Route::post('/meja', [KasirController::class, 'storeMeja'])->name('kasir.meja.store');
-    Route::delete('/meja/{id}', [KasirController::class, 'destroyMeja'])->name('kasir.meja.destroy');
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'is_active',
+    ];
 
-    // Update status order (Pending → Diproses → Selesai)
-    Route::patch('/orders/{id}/status', [KasirController::class, 'updateStatus'])->name('kasir.orders.status');
-
-});
+    protected $hidden = [
+        'password',
+    ];
+}

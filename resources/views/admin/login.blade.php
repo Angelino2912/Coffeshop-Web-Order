@@ -20,13 +20,21 @@
             <div class="error">{{ session('error') }}</div>
         @endif
 
+        @if($errors->any())
+            <div class="error">
+                @foreach($errors->all() as $error)
+                    <div>{{ $error }}</div>
+                @endforeach
+            </div>
+        @endif
+
         <!-- FORM -->
         <form action="/admin/login" method="POST">
             @csrf
 
             <div class="input-group">
-                <label>Email</label>
-                <input type="email" name="email" placeholder="Masukkan email" required>
+                <label>Email atau Nama</label>
+                <input type="text" name="email" placeholder="Masukkan email atau nama" value="{{ old('email') }}" required>
             </div>
 
             <div class="input-group">

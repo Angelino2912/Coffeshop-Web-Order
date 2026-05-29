@@ -11,36 +11,26 @@ use App\Models\Customer;
 class AuthController extends Controller
 {
     // ADMIN & KASIR LOGIN
-    public function adminLogin(Request $request)
-    {
-        $login = $request->input('email') ?? $request->input('name') ?? $request->input('username');
+public function adminLogin(Request $request)
+{
+    $request->validate([
+        'name'     => 'required',
+        'password' => 'required',
+    ]);
 
-        $request->validate([
-            'password' => 'required',
-        ]);
+    $admin = \App\Models\Admin::where('name', $request->name)->first();
 
-        if (empty($login)) {
-            return back()->withErrors(['email' => 'Email atau nama wajib diisi'])->withInput();
+   if ($admin && $admin->password === $request->password) {
+        if ($admin->role === 'kasir') {
+            session([
+                'kasir_id' => $admin->id,
+                'role'     => 'kasir',
+                'name'     => $admin->name,
+            ]);
+            return redirect('/kasir/dashboard');
         }
 
-        // Determine if the input is email or name
-        $isEmail = filter_var($login, FILTER_VALIDATE_EMAIL);
-
-        $admin = $isEmail
-            ? \App\Models\Admin::where('email', $login)->first()
-            : \App\Models\Admin::where('name', $login)->first();
-
-        if ($admin && Hash::check($request->password, $admin->password)) {
-            if ($admin->role === 'kasir') {
-                session([
-                    'kasir_id' => $admin->id,
-                    'role'     => 'kasir',
-                    'name'     => $admin->name,
-                ]);
-                return redirect('/kasir/dashboard');
-            }
-
-            // Default: admin
+        if ($admin->role === 'admin') {
             session([
                 'admin_id' => $admin->id,
                 'role'     => 'admin',
@@ -48,9 +38,10 @@ class AuthController extends Controller
             ]);
             return redirect('/admin/dashboard');
         }
-
-        return back()->withErrors(['email' => 'Email/nama atau password salah'])->withInput();
     }
+
+    return back()->withErrors(['name' => 'Nama atau password salah']);
+}
     // CUSTOMER (GUEST) — tidak diubah
     public function guestLogin(Request $request)
     {

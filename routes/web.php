@@ -74,7 +74,7 @@ Route::get('/admin/analytics', [AdminController::class, 'analytics'])->name('adm
 Route::post('/admin/meja/{no_meja}/delete', [TableController::class, 'destroy']);
 Route::post('/admin/logout', function () {
     session()->forget(['admin_id', 'role', 'name']);
-    return redirect('/admin/login');
+    return redirect('/login-karyawan');
 })->name('admin.logout');
 
 // ─── KASIR ────────────────────────────────────────────────────────────────────

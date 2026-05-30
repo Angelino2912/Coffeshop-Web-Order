@@ -93,7 +93,7 @@
     text-overflow: ellipsis;
 }
 
-.btn-barcode, .btn-delete-meja {
+.btn-barcode {
     width: 100%;
     border-radius: 8px;
     padding: 5px 0;
@@ -108,30 +108,10 @@
     transition: background .15s;
     border: 1px solid var(--border);
     margin-top: 6px;
+    background: #FAF7F2;
+    color: var(--text2);
 }
-.btn-barcode { background: #FAF7F2; color: var(--text2); }
 .btn-barcode:hover { background: #EDE8E0; }
-.btn-delete-meja { background: #fff; color: #e53935; border-color: #e53935; }
-.btn-delete-meja:hover:not(:disabled) { background: #fff0f0; }
-.btn-delete-meja:disabled { background: #f5f5f5; color: #bbb; border-color: #eee; cursor: not-allowed; }
-
-/* ── Tambah Meja Btn ── */
-.btn-tambah-meja {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--brown);
-    color: #fff;
-    border: none;
-    border-radius: 10px;
-    padding: 8px 16px;
-    font-size: 13px;
-    font-weight: 600;
-    font-family: inherit;
-    cursor: pointer;
-    transition: background .15s;
-}
-.btn-tambah-meja:hover { background: #5c3a20; }
 
 /* ── Modal (tanpa Bootstrap) ── */
 .gg-overlay {
@@ -199,10 +179,6 @@
 .qr-modal-body h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
 .qr-modal-sub  { font-size: 12px; color: var(--text3); margin-bottom: 16px; }
 .qr-output-wrap { display: flex; justify-content: center; margin-bottom: 12px; }
-
-/* Hapus confirm */
-.hapus-icon { font-size: 40px; color: #e74c3c; display: block; margin-bottom: 12px; }
-.hapus-desc { color: var(--text2); font-size: 13px; margin-bottom: 0; }
 </style>
 @endpush
 
@@ -212,14 +188,10 @@
 <div class="kasir-content">
 <div class="dashboard-grid">
 
-    {{-- ===== KIRI: Status Meja ===== --}}
     <div class="left-panel">
         <div class="panel-box">
             <div class="panel-box-header">
                 <h2 class="panel-box-title">Status Meja</h2>
-                <button class="btn-tambah-meja" onclick="openModal('modalTambah')">
-                    <i class="bi bi-plus-circle"></i> Tambah Meja
-                </button>
             </div>
 
             <div class="meja-status-grid" id="mejaStatusGrid">
@@ -258,55 +230,18 @@
                         onclick="showBarcode('{{ $meja->no_meja }}', '{{ $meja->qr_uuid }}')">
                         <i class="bi bi-qr-code"></i> Tampilkan barcode
                     </button>
-                    <button class="btn-delete-meja"
-                        onclick="confirmHapus('{{ $meja->no_meja }}', '{{ $mejaStatus }}')"
-                        {{ $mejaStatus !== 'kosong' ? 'disabled' : '' }}
-                        title="{{ $mejaStatus !== 'kosong' ? 'Meja sedang digunakan' : 'Hapus meja ini' }}">
-                        <i class="bi bi-trash"></i>
-                        {{ $mejaStatus !== 'kosong' ? 'Sedang digunakan' : 'Hapus Meja' }}
-                    </button>
                 </div>
                 @empty
                 <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text3);">
                     <i class="bi bi-layout-three-columns" style="font-size:32px;display:block;margin-bottom:8px;"></i>
-                    Belum ada meja. Klik Tambah Meja.
+                    Belum ada meja.
                 </div>
                 @endforelse
             </div>
         </div>
     </div>
 
-</div>{{-- .dashboard-grid --}}
-</div>{{-- .kasir-content --}}
-
-
-{{-- ===== MODAL: Tambah Meja ===== --}}
-<div class="gg-overlay" id="modalTambah" onclick="overlayClose(event, 'modalTambah')">
-    <div class="gg-modal">
-        <p class="gg-modal-title">Tambah Meja</p>
-        <label class="gg-label">Nomor Meja</label>
-        <input type="text" id="noMejaInput" class="gg-input" placeholder="Contoh: A1" maxlength="10">
-        <div class="gg-modal-actions">
-            <button class="btn-secondary" onclick="closeModal('modalTambah')">Batal</button>
-            <button class="btn-primary" onclick="submitTambah()">Simpan</button>
-        </div>
-    </div>
 </div>
-
-{{-- ===== MODAL: Konfirmasi Hapus ===== --}}
-<div class="gg-overlay" id="modalHapus" onclick="overlayClose(event, 'modalHapus')">
-    <div class="gg-modal" style="text-align:center;">
-        <i class="bi bi-exclamation-triangle-fill hapus-icon"></i>
-        <p class="gg-modal-title" style="text-align:center;">Hapus Meja?</p>
-        <p class="hapus-desc">
-            Meja <strong id="hapusMejaNo"></strong> akan dihapus permanen.<br>
-            Tindakan ini tidak bisa dibatalkan.
-        </p>
-        <div class="gg-modal-actions" style="justify-content:center;">
-            <button class="btn-secondary" onclick="closeModal('modalHapus')">Batal</button>
-            <button id="btnKonfirmasiHapus" class="btn-primary" style="background:#e53935;">Ya, Hapus</button>
-        </div>
-    </div>
 </div>
 
 {{-- ===== MODAL: QR Barcode ===== --}}
@@ -329,71 +264,12 @@
 @push('custom_script')
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script>
-var CSRF = '{{ csrf_token() }}';
-
 // ── Modal helpers ─────────────────────────────────────────────────────────────
 function openModal(id)  { document.getElementById(id).classList.add('show'); }
 function closeModal(id) { document.getElementById(id).classList.remove('show'); }
 function overlayClose(e, id) {
     if (e.target === document.getElementById(id)) closeModal(id);
 }
-
-// ── Tambah Meja ───────────────────────────────────────────────────────────────
-function submitTambah() {
-    var no = document.getElementById('noMejaInput').value.trim();
-    if (!no) { alert('Masukkan nomor meja.'); return; }
-
-    fetch('{{ route("kasir.meja.store") }}', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
-        body: JSON.stringify({ no_meja: no })
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) location.reload();
-        else alert(data.message || 'Gagal menambahkan meja.');
-    })
-    .catch(() => alert('Terjadi kesalahan.'));
-}
-
-// ── Hapus Meja ────────────────────────────────────────────────────────────────
-var _mejaToDelete = null;
-
-function confirmHapus(noMeja, status) {
-    if (status !== 'kosong') { alert('Meja sedang digunakan.'); return; }
-    _mejaToDelete = noMeja;
-    document.getElementById('hapusMejaNo').textContent = noMeja;
-    openModal('modalHapus');
-}
-
-document.getElementById('btnKonfirmasiHapus').addEventListener('click', function () {
-    if (!_mejaToDelete) return;
-    var btn = this;
-    btn.disabled = true;
-
-    fetch('/kasir/meja/' + encodeURIComponent(_mejaToDelete) + '/delete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF }
-    })
-    .then(r => r.json())
-    .then(data => {
-        closeModal('modalHapus');
-        if (data.success) {
-            var box = document.querySelector('[data-meja="' + _mejaToDelete + '"]');
-            if (box) {
-                box.style.transition = 'opacity .3s, transform .3s';
-                box.style.opacity    = '0';
-                box.style.transform  = 'scale(.85)';
-                setTimeout(() => box.remove(), 300);
-            }
-        } else {
-            alert(data.message || 'Gagal menghapus meja.');
-        }
-        btn.disabled  = false;
-        _mejaToDelete = null;
-    })
-    .catch(() => { alert('Terjadi kesalahan.'); btn.disabled = false; });
-});
 
 // ── QR Barcode ────────────────────────────────────────────────────────────────
 function showBarcode(noMeja, uuid) {
@@ -434,18 +310,6 @@ function pollMejaStatus() {
                 if (cn) {
                     cn.textContent   = meja.status !== 'kosong' ? (meja.customer_name || '—') : '';
                     cn.style.display = meja.status !== 'kosong' ? '' : 'none';
-                }
-
-                var del = box.querySelector('.btn-delete-meja');
-                if (del) {
-                    del.disabled     = meja.status !== 'kosong';
-                    del.title        = meja.status !== 'kosong' ? 'Meja sedang digunakan' : 'Hapus meja ini';
-                    del.innerHTML    = '<i class="bi bi-trash"></i> ' +
-                                       (meja.status !== 'kosong' ? 'Sedang digunakan' : 'Hapus Meja');
-                    del.setAttribute('onclick',
-                        meja.status === 'kosong'
-                            ? "confirmHapus('" + meja.no_meja + "', 'kosong')"
-                            : '');
                 }
             });
         })

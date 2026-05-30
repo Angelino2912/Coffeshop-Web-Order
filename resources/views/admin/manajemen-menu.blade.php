@@ -36,7 +36,15 @@
                 <tr>
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $item->name }}</td>
-                    <td><span class="badge {{ $item->category == 'Makanan' ? 'badge-makanan' : 'badge-minuman' }}">{{ $item->category }}</span></td>
+                    <td>
+                        <span class="badge
+                            @if($item->category == 'Makanan') badge-makanan
+                            @elseif($item->category == 'Minuman') badge-minuman
+                            @else badge-snack
+                            @endif">
+                            {{ $item->category }}
+                        </span>
+                    </td>
                     <td>Rp {{ number_format($item->price, 0, ',', '.') }}</td>
                     <td class="aksi-col">
                         <button class="btn-edit" onclick="openEdit({{ $item->id }}, '{{ $item->name }}', '{{ $item->category }}', {{ $item->price }})">Edit</button>
@@ -54,10 +62,10 @@
         </table>
     </div>
 
+    {{-- Modal Tambah --}}
     <div class="modal-overlay" id="modalTambah">
         <div class="modal-box">
             <h2>Tambah Menu</h2>
-            {{-- enctype wajib untuk upload file --}}
             <form action="/admin/manajemen-menu" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="form-group">
@@ -69,13 +77,13 @@
                     <select name="category" required>
                         <option value="Makanan">Makanan</option>
                         <option value="Minuman">Minuman</option>
+                        <option value="Snack">Snack</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Harga</label>
                     <input type="number" name="price" required placeholder="Contoh: 25000">
                 </div>
-                {{-- INPUT FOTO --}}
                 <div class="form-group">
                     <label>Foto Menu <small style="color:#9ca3af">(opsional)</small></label>
                     <input type="file" name="image" accept="image/*" onchange="previewFoto(this, 'previewTambah')">
@@ -89,10 +97,10 @@
         </div>
     </div>
 
+    {{-- Modal Edit --}}
     <div class="modal-overlay" id="modalEdit">
         <div class="modal-box">
             <h2>Edit Menu</h2>
-            {{-- enctype wajib untuk upload file --}}
             <form action="" method="POST" id="formEdit" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
@@ -105,13 +113,13 @@
                     <select name="category" id="editCategory" required>
                         <option value="Makanan">Makanan</option>
                         <option value="Minuman">Minuman</option>
+                        <option value="Snack">Snack</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Harga</label>
                     <input type="number" name="price" id="editPrice" required>
                 </div>
-                {{-- INPUT FOTO --}}
                 <div class="form-group">
                     <label>Foto Menu <small style="color:#9ca3af">(kosongkan jika tidak diganti)</small></label>
                     <input type="file" name="image" accept="image/*" onchange="previewFoto(this, 'previewEdit')">
@@ -133,7 +141,6 @@ function openEdit(id, name, category, price) {
     document.getElementById('editCategory').value = category;
     document.getElementById('editPrice').value = price;
     document.getElementById('formEdit').action = '/admin/manajemen-menu/' + id;
-    // reset preview foto saat modal dibuka
     document.getElementById('previewEdit').style.display = 'none';
     document.getElementById('modalEdit').style.display = 'flex';
 }

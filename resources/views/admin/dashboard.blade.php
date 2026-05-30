@@ -60,47 +60,6 @@
     </div>
 </div>
 
-<div class="dashboard-grid">
-    <div class="left-panel" style="grid-column: 1 / -1;">
-        <div class="meja-status-section">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                <h2 style="margin:0; font-size:16px; font-weight:700; color:#3d2b1f;">Status Meja</h2>
-                <a href="/admin/manajemen-meja"
-                   style="background:#9b632c; color:#fff; border:none; border-radius:10px; padding:8px 16px; font-size:13px; font-weight:600; text-decoration:none;">
-                    Manajemen Meja
-                </a>
-            </div>
-
-            <div class="meja-status-grid">
-                @foreach($mejas as $meja)
-                    @php
-                        $activeOrder = \App\Models\Order::where('table_number', $meja->no_meja)
-                            ->whereIn('status', ['pending', 'confirmed'])
-                            ->latest()
-                            ->first();
-                        $mejaStatus = $activeOrder ? ($activeOrder->status === 'pending' ? 'pending' : 'aktif') : 'kosong';
-                    @endphp
-                    <div class="meja-status-box meja-box-{{ $mejaStatus }}">
-                        <div class="meja-status-no">{{ $meja->no_meja }}</div>
-                        <div class="meja-status-label">
-                            <span class="status-dot"></span>
-                            <span class="status-text">
-                                @if($mejaStatus === 'pending') Memesan
-                                @elseif($mejaStatus === 'aktif') Diproses
-                                @else Kosong
-                                @endif
-                            </span>
-                        </div>
-                        <div class="meja-cust-name" @if($mejaStatus === 'kosong') style="display:none" @endif>
-                            {{ $activeOrder?->customer_name ?? '' }}
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
-
-</div>
 @endsection
 
 @push('custom_script')

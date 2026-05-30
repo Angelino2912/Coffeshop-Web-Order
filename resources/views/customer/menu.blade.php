@@ -42,6 +42,7 @@
         <div class="category-filters">
             <button type="button" class="filter-btn active" data-category="Makanan">Makanan</button>
             <button type="button" class="filter-btn" data-category="Minuman">Minuman</button>
+            <button type="button" class="filter-btn" data-category="Snack">Snack</button>
         </div>
     </div>
 
@@ -117,6 +118,36 @@
         </div>
     </div>
 
+    {{-- SNACK --}}
+    <div class="kelompok" data-group-category="Snack">
+        <h2>Snack</h2>
+        <div class="menu">
+            @foreach($items as $item)
+                @if($item->category == 'Snack')
+                    <div class="menu-item" data-name="{{ strtolower($item->name) }}">
+                        <div class="img-wrap">
+                            <img src="{{ $item->image ? asset('storage/' . $item->image) : asset('images/cart-logo.png') }}"
+                                alt="{{ $item->name }}" class="image">
+                            <span class="price-badge">Rp {{ number_format($item->price, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="detail">
+                            <h3>{{ $item->name }}</h3>
+                        </div>
+                        <form action="/cart/add" method="POST">
+                            @csrf
+                            <input type="hidden" name="item_id" value="{{ $item->id }}">
+                            <div class="total">
+                                <label>Jumlah:</label>
+                                <input type="number" name="quantity" value="1" min="1">
+                                <button type="submit" class="btn-cart">+ Keranjang</button>
+                            </div>
+                        </form>
+                    </div>
+                @endif
+            @endforeach
+        </div>
+    </div>
+
     </div>
 </div>
 @endsection
@@ -139,11 +170,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const itemsInGroup = category.querySelectorAll('.menu-item');
             itemsInGroup.forEach(item => {
                 const itemName = item.dataset.name;
-                
-                // Check category match
                 const categoryMatch = (activeCategory === 'all' || categoryName === activeCategory);
-                
-                // Check search match
                 const searchMatch = itemName.includes(searchTerm);
 
                 if (categoryMatch && searchMatch) {
@@ -154,19 +181,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            // Show or hide the whole category section
-            if (hasVisibleItems) {
-                category.style.display = '';
-            } else {
-                category.style.display = 'none';
-            }
+            category.style.display = hasVisibleItems ? '' : 'none';
         });
     }
 
-    // Search Input Event Listener
     searchInput.addEventListener('input', filterMenu);
 
-    // Filter Buttons Event Listener
     filterButtons.forEach(btn => {
         btn.addEventListener('click', function() {
             filterButtons.forEach(b => b.classList.remove('active'));

@@ -1,317 +1,327 @@
 @extends('template.main-kasir')
 
 @push('style')
-<link rel="stylesheet" href="{{ asset('style/kasir/dashboard.css') }}">
+<link rel="stylesheet" href="{{ asset('style/kasir/kasir.css') }}">
 @endpush
 
 @section('title', 'Dashboard Kasir')
 
 @section('content')
 
-@if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
+{{-- ===== MAIN: Menu Panel ===== --}}
+<main class="kasir-main">
 
-{{-- Main Grid --}}
-<div class="dashboard-grid">
+    {{-- Search --}}
+    <div class="kasir-searchbar">
+        <i class="bi bi-search"></i>
+        <input class="kasir-search-input"
+               type="text"
+               id="menuSearch"
+               placeholder="Cari menu..."
+               oninput="filterMenu(this.value)">
+        <span class="kasir-search-kbd">⌘K</span>
+    </div>
 
-    {{-- LEFT --}}
-    <div class="left-panel">
+    {{-- Category Pills --}}
+    <div class="kasir-category-row" id="categoryRow">
 
-        {{-- Status Meja --}}
-        <div class="meja-status-section">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-                <h2 style="margin:0; font-size:16px; font-weight:700; color:#3d2b1f;">Status Meja</h2>
-                <form method="POST" action="{{ route('kasir.meja.generate-qr') }}">
-                    @csrf
-                    <button type="submit"
-                        style="background:#9b632c; color:#fff; border:none; border-radius:10px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px;">
-                        <i class="bi bi-qr-code"></i> Generate QR
-                    </button>
-                </form>
+        {{-- Semua --}}
+        <div class="cat-card cat-card-coffee active" data-cat="semua" onclick="setCategory(this, 'semua')">
+            <span class="cat-status-badge badge-avail-white">Tersedia</span>
+            <div class="cat-card-name">Semua</div>
+            <div class="cat-card-count">{{ $menus->count() }} item</div>
+            <i class="bi bi-grid cat-bg-icon"></i>
+        </div>
+
+        @php
+            /**
+             * Map nama kategori (lowercase) → style card + ikon Bootstrap Icons
+             * Tambahkan entri baru jika ada kategori lain di database.
+             *
+             * Ikon yang dipakai:
+             *   Makanan  → bi-egg-fried   (telur/makanan)
+             *   Minuman  → bi-cup-straw   (gelas dengan sedotan)
+             *   Snack    → bi-cookie      (biskuit)
+             *   Kopi     → bi-cup-hot     (cangkir kopi)
+             *   Dessert  → bi-cake2       (kue)
+             *   default  → bi-box         (kotak generik)
+             */
+            $catMap = [
+                'makanan'  => ['style' => 'cat-card-snack',  'icon' => 'bi-egg-fried'],
+                'minuman'  => ['style' => 'cat-card-coffee', 'icon' => 'bi-cup-straw'],
+                'snack'    => ['style' => 'cat-card-tea',    'icon' => 'bi-cookie'],
+                'kopi'     => ['style' => 'cat-card-coffee', 'icon' => 'bi-cup-hot'],
+                'dessert'  => ['style' => 'cat-card-snack',  'icon' => 'bi-cake2'],
+                'desserts' => ['style' => 'cat-card-snack',  'icon' => 'bi-cake2'],
+            ];
+
+            // Fallback untuk kategori yang belum ada di $catMap
+            $fallbackStyles = ['cat-card-tea', 'cat-card-coffee', 'cat-card-snack'];
+            $fallbackIcons  = ['bi-grid', 'bi-cup-hot', 'bi-cookie'];
+        @endphp
+
+        @foreach($categories as $i => $cat)
+        @php
+            $key    = strtolower(trim($cat->name));
+            $mapped = $catMap[$key] ?? null;
+            $cStyle = $mapped ? $mapped['style'] : $fallbackStyles[$i % count($fallbackStyles)];
+            $cIcon  = $mapped ? $mapped['icon']  : $fallbackIcons[$i % count($fallbackIcons)];
+        @endphp
+        <div class="cat-card {{ $cStyle }}"
+             data-cat="{{ $cat->id }}"
+             onclick="setCategory(this, '{{ $cat->id }}')">
+            <span class="cat-status-badge badge-avail-green">Tersedia</span>
+            <div class="cat-card-name">{{ $cat->name }}</div>
+            <div class="cat-card-count">{{ $cat->menus_count }} item</div>
+            <i class="bi {{ $cIcon }} cat-bg-icon"></i>
+        </div>
+        @endforeach
+
+    </div>
+
+    {{-- Menu Grid --}}
+    <div class="kasir-menu-grid" id="menuGrid">
+        @forelse($menus as $menu)
+        <div class="menu-card"
+             data-cat="{{ $menu->category }}"
+             data-name="{{ strtolower($menu->name) }}">
+            <div class="menu-card-img">
+                @if($menu->image)
+                    <img src="{{ asset('storage/' . $menu->image) }}" alt="{{ $menu->name }}">
+                @else
+                    ☕
+                @endif
             </div>
+            <div class="menu-card-name">{{ $menu->name }}</div>
+            <div class="menu-card-price">Rp {{ number_format($menu->price, 0, ',', '.') }}</div>
+            <button class="menu-add-btn"
+                    onclick="addToCart({{ $menu->id }}, '{{ addslashes($menu->name) }}', {{ $menu->price }}, '{{ $menu->image ? asset('storage/'.$menu->image) : '' }}')"
+                    aria-label="Tambah {{ $menu->name }}">+</button>
+        </div>
+        @empty
+        <div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text3);">
+            <i class="bi bi-cup" style="font-size:32px; display:block; margin-bottom:8px;"></i>
+            Belum ada menu tersedia.
+        </div>
+        @endforelse
+    </div>
 
-            <div class="meja-status-grid" id="mejaStatusGrid">
+</main>
+
+{{-- ===== RECEIPT PANEL ===== --}}
+<aside class="kasir-receipt">
+
+    {{-- Tabs --}}
+    <div class="receipt-tabs">
+        <button class="receipt-tab active" onclick="setTab(this)">Makan di Sini</button>
+        <button class="receipt-tab" onclick="setTab(this)">Bawa Pulang</button>
+    </div>
+
+    {{-- Customer & Table --}}
+    <div class="receipt-fields">
+        <div class="receipt-field">
+            <label class="receipt-field-label" for="custName">Nama pelanggan</label>
+            <input class="receipt-field-input" id="custName" type="text" placeholder="Nama...">
+        </div>
+        <div class="receipt-field" id="tableField">
+            <label class="receipt-field-label" for="tableSelect">Meja</label>
+            <select class="receipt-field-select" id="tableSelect">
+                <option value="">— Pilih meja —</option>
                 @foreach($mejas as $meja)
-                @php
-                    $activeOrder = \App\Models\Order::where('table_number', $meja->no_meja)
-                        ->whereIn('status', ['pending', 'confirmed'])
-                        ->latest()->first();
-
-                    if ($activeOrder?->status === 'confirmed') {
-                        $mejaStatus = 'aktif';
-                    } elseif ($activeOrder?->status === 'pending') {
-                        $mejaStatus = 'pending';
-                    } else {
-                        $mejaStatus = 'kosong';
-                    }
-                @endphp
-                <div class="meja-status-box meja-box-{{ $mejaStatus }}"
-                     data-meja="{{ $meja->no_meja }}"
-                     data-uuid="{{ $meja->qr_uuid }}">
-                    <div class="meja-status-no">{{ $meja->no_meja }}</div>
-                    <div class="meja-status-label">
-                        <span class="status-dot"></span>
-                        <span class="status-text">
-                            @if($mejaStatus === 'pending')   Memesan
-                            @elseif($mejaStatus === 'aktif') Diproses
-                            @else Kosong
-                            @endif
-                        </span>
-                    </div>
-                    <div class="meja-cust-name" @if($mejaStatus === 'kosong') style="display:none" @endif>
-                        {{ $mejaStatus !== 'kosong' ? ($activeOrder?->customer_name ?? '—') : '' }}
-                    </div>
-                    <button class="btn-barcode"
-                        onclick="showBarcode('{{ $meja->no_meja }}', '{{ $meja->qr_uuid }}')">
-                        <i class="bi bi-qr-code"></i> Tampilkan barcode
-                    </button>
-                </div>
+                @php $st = $mejaStatuses[$meja->no_meja] ?? 'kosong'; @endphp
+                <option value="{{ $meja->no_meja }}" {{ $st !== 'kosong' ? 'disabled' : '' }}>
+                    {{ $meja->no_meja }}{{ $st !== 'kosong' ? ' (terpakai)' : '' }}
+                </option>
                 @endforeach
-            </div>
-        </div>
-
-    </div>
-
-    {{-- RIGHT: Order Masuk --}}
-    <div class="right-panel">
-        <div class="order-list-section">
-            <h2>Order Masuk</h2>
-            @forelse($orders as $order)
-                <div class="order-card">
-                    <div class="order-card-header">
-                        <div>
-                            <h2>{{ $order->customer_name }}</h2>
-                            <p class="order-meta">Meja {{ $order->table_number }} &bullet; {{ $order->created_at->format('d M Y H:i') }}</p>
-                        </div>
-                        <span class="order-status {{ $order->status }}">{{ ucfirst($order->status) }}</span>
-                    </div>
-
-                    @if($order->items->count())
-                    <div class="order-items">
-                        <h3>Pesanan</h3>
-                        <ul>
-                            @foreach($order->items as $item)
-                                <li>
-                                    <span class="item-name">{{ $item->menu?->name ?? 'Menu tidak tersedia' }}</span>
-                                    <span class="item-qty">x{{ $item->quantity }}</span>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-                    @endif
-
-                    @if($order->note)
-                    <div class="order-note">
-                        <strong>Catatan:</strong> {{ $order->note }}
-                    </div>
-                    @endif
-
-                    <div class="order-footer">
-                        <div class="order-total">Rp {{ number_format($order->total) }}</div>
-                        <div class="status-form">
-                            <select class="status-select"
-                                    data-id="{{ $order->id }}"
-                                    data-token="{{ csrf_token() }}">
-                                <option value="pending"   {{ $order->status === 'pending'   ? 'selected' : '' }}>Pending</option>
-                                <option value="confirmed" {{ $order->status === 'confirmed' ? 'selected' : '' }}>Diproses</option>
-                                <option value="completed" {{ $order->status === 'completed' ? 'selected' : '' }}>Selesai</option>
-                            </select>
-                            <button type="button" class="btn-update-status" data-id="{{ $order->id }}">
-                                <span class="button-text">Update</span>
-                                <span class="button-spinner" aria-label="Memuat"></span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            @empty
-                <div class="order-card"><p>Tidak ada order masuk.</p></div>
-            @endforelse
+            </select>
         </div>
     </div>
 
-</div>
-
-{{-- Modal Barcode --}}
-<div class="modal fade" id="modalBarcode" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content barcode-modal">
-            <div class="modal-header barcode-modal-header">
-                <h5 class="modal-title" id="barcode-modal-title">QR Code Meja</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" style="text-align:center; padding:24px;">
-                <p class="barcode-sub">Scan untuk mulai memesan</p>
-                <div class="qr-output-wrap">
-                    <div id="qrcode-output"></div>
-                </div>
-                <p class="qr-uuid-text" id="qr-uuid-display"></p>
-                <div class="barcode-actions">
-                    <button class="btn-tutup" data-bs-dismiss="modal">Tutup</button>
-                </div>
-            </div>
+    {{-- Order List --}}
+    <div class="receipt-order-list">
+        <span class="receipt-order-label">Daftar Pesanan</span>
+        <div id="cartItems"></div>
+        <div class="receipt-empty" id="cartEmpty">
+            <i class="bi bi-cart-x"></i>
+            Belum ada pesanan.<br>Pilih menu di sebelah kiri.
         </div>
     </div>
-</div>
+
+    {{-- Footer --}}
+    <div class="receipt-footer">
+        <div class="receipt-total-row">
+            <span>Subtotal</span>
+            <span id="subtotalVal">Rp 0</span>
+        </div>
+        <div class="receipt-total-row">
+            <span>Pajak (10%)</span>
+            <span id="taxVal">Rp 0</span>
+        </div>
+        <div class="receipt-total-row grand">
+            <span>Total</span>
+            <span id="totalVal">Rp 0</span>
+        </div>
+        <button class="receipt-place-btn" onclick="placeOrder()">
+            <i class="bi bi-arrow-right-circle"></i>
+            Buat Pesanan
+            <span class="receipt-place-price" id="placeTotal">Rp 0</span>
+        </button>
+    </div>
+
+</aside>
 
 @endsection
 
 @push('custom_script')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script>
+var cart = [];
 
-// ─── Chart Bar Mingguan ───────────────────────────────────────────────────────
-const barCanvas = document.getElementById('barChart');
-if (barCanvas) {
-const barCtx = barCanvas.getContext('2d');
-new Chart(barCtx, {
-    type: 'bar',
-    data: {
-        labels: @json($weeklyLabels),
-        datasets: [{
-            label: 'Penjualan',
-            data: @json($weeklyData),
-            backgroundColor: '#9b632c',
-            borderRadius: 6,
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true } }
-    }
-});
+function fmt(n) {
+    return 'Rp ' + parseInt(n).toLocaleString('id-ID');
 }
 
-// ─── Chart Pie Kategori ───────────────────────────────────────────────────────
-const pieCanvas = document.getElementById('pieChart');
-if (pieCanvas) {
-const pieCtx = pieCanvas.getContext('2d');
-new Chart(pieCtx, {
-    type: 'doughnut',
-    data: {
-        labels: ['Makanan', 'Minuman', 'Snack'],
-        datasets: [{
-            data: @json($categoryData),
-            backgroundColor: ['#9b632c', '#5DCAA5', '#EF9F27'],
-        }]
-    },
-    options: {
-        responsive: false,
-        plugins: { legend: { display: false } }
-    }
-});
+function addToCart(id, name, price, img) {
+    var ex = cart.find(function(i) { return i.id === id; });
+    if (ex) { ex.qty++; }
+    else     { cart.push({ id: id, name: name, price: price, img: img, qty: 1 }); }
+    renderCart();
 }
 
-// ─── Barcode Modal ────────────────────────────────────────────────────────────
-function showBarcode(noMeja, uuid) {
-    document.getElementById('barcode-modal-title').textContent = 'QR Code Meja ' + noMeja;
-    document.getElementById('qr-uuid-display').textContent     = uuid || '';
-
-    var output = document.getElementById('qrcode-output');
-    output.innerHTML = '';
-
-    if (!uuid) {
-        output.innerHTML = '<p style="color:red;">QR belum digenerate untuk meja ini.</p>';
-    } else {
-        new QRCode(output, {
-            text: window.location.origin + '/table/' + uuid,
-            width: 180, height: 180,
-            colorDark: '#3d2b1f', colorLight: '#ffffff'
-        });
-    }
-
-    new bootstrap.Modal(document.getElementById('modalBarcode')).show();
+function changeQty(id, delta) {
+    var idx = cart.findIndex(function(i) { return i.id === id; });
+    if (idx < 0) return;
+    cart[idx].qty += delta;
+    if (cart[idx].qty <= 0) cart.splice(idx, 1);
+    renderCart();
 }
 
-// ─── Update Status Order via AJAX ─────────────────────────────────────────────
-document.addEventListener('click', function (e) {
-    var btn = e.target.closest('.btn-update-status');
-    if (!btn) return;
+function clearCart() {
+    if (!cart.length) return;
+    if (!confirm('Kosongkan semua pesanan?')) return;
+    cart = [];
+    renderCart();
+}
 
-    var id     = btn.dataset.id;
-    var form   = btn.closest('.status-form');
-    var select = form.querySelector('.status-select');
-    var status = select.value;
-    var token  = select.dataset.token;
+function renderCart() {
+    var wrap  = document.getElementById('cartItems');
+    var empty = document.getElementById('cartEmpty');
 
-    btn.classList.add('loading');
-    btn.disabled = true;
+    if (!cart.length) {
+        wrap.innerHTML      = '';
+        empty.style.display = '';
+        updateTotals(0);
+        return;
+    }
 
-    fetch('/kasir/orders/' + id + '/status', {
+    empty.style.display = 'none';
+    wrap.innerHTML = cart.map(function(item) {
+        var thumb = item.img
+            ? '<img src="' + item.img + '" alt="' + item.name + '">'
+            : '☕';
+        return '<div class="order-item-row">' +
+            '<div class="order-item-thumb">' + thumb + '</div>' +
+            '<div class="order-item-body">' +
+                '<div class="order-item-name">' + item.name + '</div>' +
+                '<div class="order-item-mod">' + fmt(item.price) + ' × ' + item.qty + '</div>' +
+                '<div class="order-item-qty-ctrl">' +
+                    '<button class="qty-btn" onclick="changeQty(' + item.id + ', -1)">−</button>' +
+                    '<span class="qty-num">' + item.qty + '</span>' +
+                    '<button class="qty-btn" onclick="changeQty(' + item.id + ', 1)">+</button>' +
+                '</div>' +
+            '</div>' +
+            '<div class="order-item-price">' + fmt(item.price * item.qty) + '</div>' +
+        '</div>';
+    }).join('');
+
+    var sub = cart.reduce(function(s, i) { return s + i.price * i.qty; }, 0);
+    updateTotals(sub);
+}
+
+function updateTotals(sub) {
+    var tax = Math.round(sub * 0.1);
+    var tot = sub + tax;
+    document.getElementById('subtotalVal').textContent = fmt(sub);
+    document.getElementById('taxVal').textContent      = fmt(tax);
+    document.getElementById('totalVal').textContent    = fmt(tot);
+    document.getElementById('placeTotal').textContent  = fmt(tot);
+}
+
+function placeOrder() {
+    if (!cart.length) { alert('Tambahkan menu terlebih dahulu.'); return; }
+
+    var custName = document.getElementById('custName').value.trim();
+    var table    = document.getElementById('tableSelect').value;
+    var tab      = document.querySelector('.receipt-tab.active')?.textContent?.trim() || 'Makan di Sini';
+    var sub      = cart.reduce(function(s, i) { return s + i.price * i.qty; }, 0);
+    var total    = sub + Math.round(sub * 0.1);
+
+    if (!custName) { document.getElementById('custName').focus(); alert('Masukkan nama pelanggan.'); return; }
+    if (tab === 'Makan di Sini' && !table) { alert('Pilih meja terlebih dahulu.'); return; }
+
+    fetch('{{ route("kasir.orders.store") }}', {
         method: 'POST',
         headers: {
-            'Content-Type'           : 'application/json',
-            'Accept'                 : 'application/json',
-            'X-Requested-With'       : 'XMLHttpRequest',
-            'X-CSRF-TOKEN'           : token,
-            'X-HTTP-Method-Override' : 'PUT'
+            'Content-Type' : 'application/json',
+            'Accept'       : 'application/json',
+            'X-CSRF-TOKEN' : '{{ csrf_token() }}'
         },
-        body: JSON.stringify({ status: status })
+        body: JSON.stringify({
+            customer_name : custName,
+            table_number  : table,
+            order_type    : tab,
+            items         : cart.map(function(i) { return { menu_id: i.id, quantity: i.qty, price: i.price }; }),
+            total         : total
+        })
     })
-    .then(function (res) { return res.json(); })
-    .then(function (data) {
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
         if (data.success) {
-            var card  = btn.closest('.order-card');
-            var badge = card.querySelector('.order-status');
-            badge.textContent = data.status_label;
-            badge.className   = 'order-status ' + data.status;
+            window.location.href = '/kasir/pembayaran/' + data.order_id;
         } else {
-            alert('Status belum berhasil diupdate.');
+            alert(data.message || 'Gagal membuat pesanan.');
         }
     })
-    .catch(function () {
-        alert('Status belum berhasil diupdate. Coba lagi sebentar.');
-    })
-    .finally(function () {
-        btn.classList.remove('loading');
-        btn.disabled = false;
-    });
-});
-
-// ─── Delete Meja ─────────────────────────────────────────────────────────────
-// ─── Polling Status Meja tiap 5 detik ────────────────────────────────────────
-function pollMejaStatus() {
-    fetch('/kasir/meja/status')
-        .then(res => res.json())
-        .then(data => {
-            data.forEach(meja => {
-                var box = document.querySelector('[data-meja="' + meja.no_meja + '"]');
-                if (!box) return;
-
-                box.classList.remove('meja-box-kosong', 'meja-box-pending', 'meja-box-aktif');
-                box.classList.add('meja-box-' + meja.status);
-
-                var statusText = box.querySelector('.status-text');
-                if (statusText) {
-                    statusText.textContent =
-                        meja.status === 'pending' ? 'Memesan' :
-                        meja.status === 'aktif'   ? 'Diproses' : 'Kosong';
-                }
-
-                var custName = box.querySelector('.meja-cust-name');
-                if (custName) {
-                    if (meja.customer_name && meja.status !== 'kosong') {
-                        custName.textContent   = meja.customer_name;
-                        custName.style.display = '';
-                    } else {
-                        custName.textContent   = '';
-                        custName.style.display = 'none';
-                    }
-                }
-
-                var barcodeBtn = box.querySelector('.btn-barcode');
-                if (barcodeBtn) {
-                    barcodeBtn.setAttribute('onclick',
-                        "showBarcode('" + meja.no_meja + "', '" + (meja.qr_uuid || '') + "')");
-                }
-
-            });
-        })
-        .catch(err => console.warn('Polling gagal:', err));
+    .catch(function() { alert('Terjadi kesalahan. Coba lagi.'); });
 }
 
-setInterval(pollMejaStatus, 5000);
+var activeCategory = 'semua';
+
+function setCategory(el, catId) {
+    document.querySelectorAll('.cat-card').forEach(function(c) { c.classList.remove('active'); });
+    el.classList.add('active');
+    activeCategory = String(catId);
+    applyFilter();
+}
+
+function filterMenu(query) { applyFilter(query); }
+
+function applyFilter(query) {
+    var q = (query !== undefined ? query : document.getElementById('menuSearch').value).toLowerCase();
+    document.querySelectorAll('.menu-card').forEach(function(card) {
+        var matchCat  = activeCategory === 'semua' || card.dataset.cat === activeCategory;
+        var matchName = !q || card.dataset.name.includes(q);
+        card.style.display = (matchCat && matchName) ? '' : 'none';
+    });
+}
+
+function setTab(btn) {
+    document.querySelectorAll('.receipt-tab').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    var tab = btn.textContent.trim();
+    var tableField = document.getElementById('tableField');
+    if (tab === 'Bawa Pulang') {
+        tableField.style.display = 'none';
+        document.getElementById('tableSelect').value = '';
+    } else {
+        tableField.style.display = '';
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        document.getElementById('menuSearch').focus();
+    }
+});
 </script>
 @endpush

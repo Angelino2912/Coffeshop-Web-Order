@@ -11,11 +11,6 @@
             </a>
         </li>
         <li>
-            <a href="/admin/manajemen-meja" class="{{ request()->is('admin/manajemen-meja*') ? 'active' : '' }}">
-                <i class="bi bi-grid-3x3-gap"></i> Manajemen Meja
-            </a>
-        </li>
-        <li>
             <a href="/admin/manajemen-menu" class="{{ request()->is('admin/manajemen-menu*') ? 'active' : '' }}">
                 <i class="bi bi-cup-hot"></i> Manajemen Menu
             </a>

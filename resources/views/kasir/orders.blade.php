@@ -175,74 +175,77 @@
 .orders-empty i { font-size: 40px; display: block; margin-bottom: 10px; opacity: .5; }
 .orders-pagination { margin-top: 24px; display: flex; flex-direction: column; align-items: center; }
 
-/* Modal Konfirmasi Hapus */
-.modal-overlay {
+/* ── Modal Konfirmasi Hapus ── */
+.del-modal-wrap {
     display: none;
     position: fixed; inset: 0;
-    background: rgba(0,0,0,.45);
-    z-index: 9999;
-    align-items: center; justify-content: center;
+    background: rgba(0,0,0,.5);
+    z-index: 999999;
+    align-items: center;
+    justify-content: center;
 }
-.modal-overlay.active { display: flex; }
-.modal-box {
+.del-modal-wrap.on { display: flex; }
+.del-modal {
     background: #fff;
     border-radius: 16px;
     padding: 28px 28px 22px;
     max-width: 380px; width: 90%;
-    box-shadow: 0 8px 40px rgba(0,0,0,.18);
-    animation: modalIn .18s ease;
+    box-shadow: 0 8px 40px rgba(0,0,0,.2);
+    animation: delModalIn .18s ease;
 }
-@keyframes modalIn {
+@keyframes delModalIn {
     from { transform: scale(.93); opacity: 0; }
     to   { transform: scale(1);   opacity: 1; }
 }
-.modal-icon {
+.del-modal-icon {
     width: 52px; height: 52px;
     background: #FFEBEE; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-size: 24px; color: #E53935; margin: 0 auto 14px;
+    font-size: 24px; color: #E53935;
+    margin: 0 auto 14px;
 }
-.modal-title {
+.del-modal-title {
     font-size: 16px; font-weight: 700;
-    color: var(--text, #1A1A1A);
-    text-align: center; margin-bottom: 6px;
+    color: #1A1A1A; text-align: center; margin-bottom: 6px;
 }
-.modal-desc {
-    font-size: 13px; color: var(--text3, #999);
+.del-modal-desc {
+    font-size: 13px; color: #999;
     text-align: center; margin-bottom: 22px; line-height: 1.6;
 }
-.modal-actions { display: flex; gap: 10px; }
-.btn-modal-cancel {
+.del-modal-actions { display: flex; gap: 10px; }
+.del-btn-cancel {
     flex: 1; padding: 10px;
-    border: 1px solid var(--border, #E8E0D5);
+    border: 1px solid #E8E0D5;
     border-radius: 10px; background: #FAF7F2;
-    color: var(--text2, #555); font-size: 13px;
+    color: #555; font-size: 13px;
     font-weight: 600; font-family: inherit; cursor: pointer;
 }
-.btn-modal-cancel:hover { background: #EDE8E0; }
-.btn-modal-confirm {
+.del-btn-cancel:hover { background: #EDE8E0; }
+.del-btn-ok {
     flex: 1; padding: 10px;
     border: none; border-radius: 10px;
     background: #E53935; color: #fff;
     font-size: 13px; font-weight: 700;
     font-family: inherit; cursor: pointer;
 }
-.btn-modal-confirm:hover { background: #C62828; }
+.del-btn-ok:hover { background: #C62828; }
+.del-btn-ok:disabled { background: #ef9a9a; cursor: not-allowed; }
 
-/* Toast notifikasi */
-.toast {
+/* ── Toast ── */
+.toast-k {
     position: fixed; bottom: 24px; right: 24px;
     padding: 12px 20px; border-radius: 10px;
-    font-size: 13px; font-weight: 600;
-    color: #fff; z-index: 99999;
+    font-size: 13px; font-weight: 600; color: #fff;
+    z-index: 9999999;
     box-shadow: 0 4px 20px rgba(0,0,0,.15);
     transform: translateY(60px); opacity: 0;
     transition: all .3s ease;
     display: flex; align-items: center; gap: 8px;
+    pointer-events: none;
 }
-.toast.show { transform: translateY(0); opacity: 1; }
-.toast.toast-success { background: #43A047; }
-.toast.toast-error   { background: #E53935; }
+.toast-k.show { transform: translateY(0); opacity: 1; }
+.toast-k.ts   { background: #43A047; }
+.toast-k.te   { background: #E53935; }
 </style>
 @endpush
 
@@ -409,11 +412,7 @@
                         <button class="btn-update" onclick="updateStatus({{ $order->id }})">Update</button>
                     @endif
 
-                    {{-- Tombol Hapus — selalu tampil untuk semua order --}}
-                    <button
-                        class="btn-hapus"
-                        onclick="confirmDelete({{ $order->id }}, '{{ addslashes($order->customer_name) }}', '#{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}')"
-                    >
+                    <button class="btn-hapus" onclick="openDelModal({{ $order->id }}, '{{ addslashes($order->customer_name) }}', '#{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}')">
                         <i class="bi bi-trash3"></i>
                     </button>
                 </div>
@@ -464,153 +463,140 @@
 
 </div>
 
-{{-- Modal Konfirmasi Hapus --}}
-<div class="modal-overlay" id="deleteModal">
-    <div class="modal-box">
-        <div class="modal-icon"><i class="bi bi-trash3-fill"></i></div>
-        <div class="modal-title">Hapus Order?</div>
-        <div class="modal-desc" id="deleteModalDesc">
-            Order ini akan dihapus permanen dan tidak bisa dikembalikan.
-        </div>
-        <div class="modal-actions">
-            <button class="btn-modal-cancel" onclick="closeDeleteModal()">Batal</button>
-            <button class="btn-modal-confirm" id="btnConfirmDelete">Ya, Hapus</button>
+{{-- ── Modal Konfirmasi Hapus ── --}}
+<div class="del-modal-wrap" id="delModalWrap">
+    <div class="del-modal">
+        <div class="del-modal-icon"><i class="bi bi-trash3-fill"></i></div>
+        <div class="del-modal-title">Hapus Order?</div>
+        <div class="del-modal-desc" id="delModalDesc">Order ini akan dihapus permanen.</div>
+        <div class="del-modal-actions">
+            <button class="del-btn-cancel" onclick="closeDelModal()">Batal</button>
+            <button class="del-btn-ok" id="delBtnOk">Ya, Hapus</button>
         </div>
     </div>
 </div>
 
-{{-- Toast --}}
-<div class="toast" id="toast"></div>
+{{-- ── Toast ── --}}
+<div class="toast-k" id="toastK"></div>
 
 @endsection
 
 @push('custom_script')
 <script>
-// ─── CSRF Token ───────────────────────────────────────────────────────────────
-// Ambil dari meta tag (prioritas) atau dari Blade langsung sebagai fallback
-var CSRF = (function() {
-    var meta = document.querySelector('meta[name="csrf-token"]');
-    return meta ? meta.getAttribute('content') : '{{ csrf_token() }}';
-})();
-
+var CSRF     = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 var BASE_URL = '{{ url("kasir/orders") }}';
+var _delId   = null;
 
-// ─── Toast ────────────────────────────────────────────────────────────────────
+// ── Toast ─────────────────────────────────────────────────────────────────────
 function showToast(msg, type) {
-    var t = document.getElementById('toast');
+    var t = document.getElementById('toastK');
     t.textContent = msg;
-    t.className = 'toast toast-' + (type || 'success') + ' show';
-    setTimeout(function() { t.classList.remove('show'); }, 3000);
+    t.className = 'toast-k ' + (type === 'error' ? 'te' : 'ts') + ' show';
+    setTimeout(function () { t.classList.remove('show'); }, 3000);
 }
 
-// ─── Update Status ────────────────────────────────────────────────────────────
-function updateStatus(id) {
-    var selectEl = document.getElementById('rs-' + id);
-    if (!selectEl) return;
-    var status = selectEl.value;
-
-    fetch(BASE_URL + '/' + id + '/status', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': CSRF,
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify({ status: status })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-        if (data.success) {
-            showToast('Status berhasil diupdate!', 'success');
-            setTimeout(function() { location.reload(); }, 800);
-        } else {
-            showToast(data.message || 'Gagal update status.', 'error');
-        }
-    })
-    .catch(function(err) {
-        console.error('updateStatus error:', err);
-        showToast('Terjadi kesalahan koneksi.', 'error');
-    });
-}
-
-// ─── Delete ───────────────────────────────────────────────────────────────────
-var _deleteId = null;
-
-function confirmDelete(id, name, code) {
-    _deleteId = id;
-    document.getElementById('deleteModalDesc').textContent =
+// ── Modal ─────────────────────────────────────────────────────────────────────
+function openDelModal(id, name, code) {
+    _delId = id;
+    document.getElementById('delModalDesc').textContent =
         'Order ' + code + ' atas nama "' + name + '" akan dihapus permanen dan tidak bisa dikembalikan.';
-    var btn = document.getElementById('btnConfirmDelete');
+    var btn = document.getElementById('delBtnOk');
     btn.disabled = false;
     btn.textContent = 'Ya, Hapus';
-    document.getElementById('deleteModal').classList.add('active');
+    document.getElementById('delModalWrap').classList.add('on');
 }
 
-function closeDeleteModal() {
-    document.getElementById('deleteModal').classList.remove('active');
-    _deleteId = null;
-    var btn = document.getElementById('btnConfirmDelete');
-    btn.disabled = false;
-    btn.textContent = 'Ya, Hapus';
+function closeDelModal() {
+    document.getElementById('delModalWrap').classList.remove('on');
+    _delId = null;
 }
 
-document.getElementById('btnConfirmDelete').addEventListener('click', function() {
-    if (!_deleteId) return;
+// Klik luar modal = tutup
+document.getElementById('delModalWrap').addEventListener('click', function (e) {
+    if (e.target === this) closeDelModal();
+});
+
+// ── Konfirmasi Hapus — pakai XMLHttpRequest agar tidak kena intercept fetch ───
+document.getElementById('delBtnOk').addEventListener('click', function () {
+    if (!_delId) return;
 
     var btn = this;
     btn.disabled = true;
     btn.textContent = 'Menghapus...';
 
-    fetch(BASE_URL + '/' + _deleteId, {
-        method: 'DELETE',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': CSRF,
-            'Accept': 'application/json'
-        }
-    })
-    .then(function(r) {
-        // Tangani response non-JSON (misal redirect 302 atau HTML error page)
-        var contentType = r.headers.get('content-type') || '';
-        if (!contentType.includes('application/json')) {
-            throw new Error('Response bukan JSON. Status HTTP: ' + r.status);
-        }
-        return r.json();
-    })
-    .then(function(data) {
-        if (data.success) {
-            // Hapus card dari DOM tanpa reload halaman
-            var card = document.getElementById('order-card-' + _deleteId);
-            if (card) {
-                card.style.transition = 'opacity .3s, transform .3s';
-                card.style.opacity = '0';
-                card.style.transform = 'translateX(20px)';
-                setTimeout(function() {
-                    card.remove();
-                    // Kalau tidak ada order tersisa, tampilkan empty state
-                    var list = document.getElementById('ordersList');
-                    if (list && list.querySelectorAll('.order-card').length === 0) {
-                        list.innerHTML = '<div class="orders-empty"><i class="bi bi-inbox"></i>Tidak ada order ditemukan.</div>';
-                    }
-                }, 300);
+    var xhr = new XMLHttpRequest();
+    xhr.open('DELETE', BASE_URL + '/' + _delId, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('X-CSRF-TOKEN', CSRF);
+    xhr.setRequestHeader('Accept', 'application/json');
+
+    xhr.onload = function () {
+        try {
+            var data = JSON.parse(xhr.responseText);
+            if (data.success) {
+                var card = document.getElementById('order-card-' + _delId);
+                if (card) {
+                    card.style.transition = 'opacity .3s, transform .3s';
+                    card.style.opacity    = '0';
+                    card.style.transform  = 'translateX(20px)';
+                    setTimeout(function () {
+                        card.remove();
+                        var list = document.getElementById('ordersList');
+                        if (list && list.querySelectorAll('.order-card').length === 0) {
+                            list.innerHTML = '<div class="orders-empty"><i class="bi bi-inbox"></i>Tidak ada order ditemukan.</div>';
+                        }
+                    }, 300);
+                }
+                closeDelModal();
+                showToast('Order berhasil dihapus!', 'success');
+            } else {
+                closeDelModal();
+                showToast(data.message || 'Gagal menghapus order.', 'error');
             }
-            closeDeleteModal();
-            showToast('Order berhasil dihapus!', 'success');
-        } else {
-            showToast(data.message || 'Gagal menghapus order.', 'error');
-            closeDeleteModal();
+        } catch (e) {
+            closeDelModal();
+            showToast('Terjadi kesalahan, coba lagi.', 'error');
         }
-    })
-    .catch(function(err) {
-        console.error('deleteOrder error:', err);
-        showToast('Gagal menghapus: ' + err.message, 'error');
-        closeDeleteModal();
-    });
+    };
+
+    xhr.onerror = function () {
+        closeDelModal();
+        showToast('Koneksi gagal, coba lagi.', 'error');
+    };
+
+    xhr.send();
 });
 
-// Tutup modal jika klik area luar
-document.getElementById('deleteModal').addEventListener('click', function(e) {
-    if (e.target === this) closeDeleteModal();
-});
+// ── Update Status — pakai XMLHttpRequest juga ─────────────────────────────────
+function updateStatus(id) {
+    var selectEl = document.getElementById('rs-' + id);
+    if (!selectEl) return;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', BASE_URL + '/' + id + '/status', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('X-CSRF-TOKEN', CSRF);
+    xhr.setRequestHeader('Accept', 'application/json');
+
+    xhr.onload = function () {
+        try {
+            var data = JSON.parse(xhr.responseText);
+            if (data.success) {
+                showToast('Status berhasil diupdate!', 'success');
+                setTimeout(function () { location.reload(); }, 800);
+            } else {
+                showToast(data.message || 'Gagal update status.', 'error');
+            }
+        } catch (e) {
+            showToast('Terjadi kesalahan, coba lagi.', 'error');
+        }
+    };
+
+    xhr.onerror = function () {
+        showToast('Koneksi gagal, coba lagi.', 'error');
+    };
+
+    xhr.send(JSON.stringify({ status: selectEl.value }));
+}
 </script>
 @endpush

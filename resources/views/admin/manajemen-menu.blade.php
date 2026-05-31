@@ -47,12 +47,14 @@
                     </td>
                     <td>Rp {{ number_format($item->price, 0, ',', '.') }}</td>
                     <td class="aksi-col">
-                        <button class="btn-edit" onclick="openEdit({{ $item->id }}, '{{ $item->name }}', '{{ $item->category }}', {{ $item->price }})">Edit</button>
-                        <form action="/admin/manajemen-menu/{{ $item->id }}" method="POST" onsubmit="return confirm('Hapus menu ini?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn-hapus">Hapus</button>
-                        </form>
+                        <button class="btn-edit"
+                            onclick="openEdit({{ $item->id }}, '{{ addslashes($item->name) }}', '{{ $item->category }}', {{ $item->price }})">
+                            Edit
+                        </button>
+                        <button class="btn-hapus"
+                            onclick="openHapus({{ $item->id }}, '{{ addslashes($item->name) }}')">
+                            Hapus
+                        </button>
                     </td>
                 </tr>
                 @empty
@@ -87,10 +89,12 @@
                 <div class="form-group">
                     <label>Foto Menu <small style="color:#9ca3af">(opsional)</small></label>
                     <input type="file" name="image" accept="image/*" onchange="previewFoto(this, 'previewTambah')">
-                    <img id="previewTambah" src="" alt="" style="display:none;margin-top:8px;width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;">
+                    <img id="previewTambah" src="" alt=""
+                         style="display:none;margin-top:8px;width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;">
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn-batal" onclick="document.getElementById('modalTambah').style.display='none'">Batal</button>
+                    <button type="button" class="btn-batal"
+                        onclick="document.getElementById('modalTambah').style.display='none'">Batal</button>
                     <button type="submit" class="btn-simpan">Simpan</button>
                 </div>
             </form>
@@ -123,11 +127,36 @@
                 <div class="form-group">
                     <label>Foto Menu <small style="color:#9ca3af">(kosongkan jika tidak diganti)</small></label>
                     <input type="file" name="image" accept="image/*" onchange="previewFoto(this, 'previewEdit')">
-                    <img id="previewEdit" src="" alt="" style="display:none;margin-top:8px;width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;">
+                    <img id="previewEdit" src="" alt=""
+                         style="display:none;margin-top:8px;width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;">
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn-batal" onclick="document.getElementById('modalEdit').style.display='none'">Batal</button>
+                    <button type="button" class="btn-batal"
+                        onclick="document.getElementById('modalEdit').style.display='none'">Batal</button>
                     <button type="submit" class="btn-simpan">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Modal Konfirmasi Hapus --}}
+    <div class="modal-overlay" id="modalHapus">
+        <div class="modal-box modal-box-sm">
+            <div class="hapus-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="12" fill="#fee2e2"/>
+                    <path d="M9 9l6 6M15 9l-6 6" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <h2 class="hapus-title">Hapus Menu?</h2>
+            <p class="hapus-desc">Menu "<span id="hapusNama" style="font-weight:700;"></span>" akan dihapus secara permanen.</p>
+            <form action="" method="POST" id="formHapus">
+                @csrf
+                @method('DELETE')
+                <div class="modal-actions">
+                    <button type="button" class="btn-batal"
+                        onclick="document.getElementById('modalHapus').style.display='none'">Batal</button>
+                    <button type="submit" class="btn-hapus-confirm">Ya, Hapus</button>
                 </div>
             </form>
         </div>
@@ -145,16 +174,30 @@ function openEdit(id, name, category, price) {
     document.getElementById('modalEdit').style.display = 'flex';
 }
 
+function openHapus(id, name) {
+    document.getElementById('hapusNama').textContent = name;
+    document.getElementById('formHapus').action = '/admin/manajemen-menu/' + id;
+    document.getElementById('modalHapus').style.display = 'flex';
+}
+
 function previewFoto(input, previewId) {
-    const img = document.getElementById(previewId);
+    var img = document.getElementById(previewId);
     if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = e => {
+        var reader = new FileReader();
+        reader.onload = function(e) {
             img.src = e.target.result;
             img.style.display = 'block';
         };
         reader.readAsDataURL(input.files[0]);
     }
 }
+
+document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            overlay.style.display = 'none';
+        }
+    });
+});
 </script>
 @endsection

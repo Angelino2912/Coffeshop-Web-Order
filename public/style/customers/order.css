@@ -265,27 +265,126 @@ tfoot td{
 }
 
 @media(max-width:768px){
+    body{
+        display:block;
+        padding:14px 10px 24px;
+    }
 
     .box{
-        padding:24px;
+        padding:18px;
+        border-radius:18px;
     }
 
     .box h1{
-        font-size:28px;
+        font-size:26px;
+        line-height:1.2;
+    }
+
+    .box p{
+        font-size:14px;
+        line-height:1.6;
+    }
+
+    .summary,
+    .review-panel,
+    .review-done{
+        margin-top:20px;
+        padding:16px;
+        border-radius:16px;
+    }
+
+    h2{
+        margin-top:24px;
+        margin-bottom:12px;
+        font-size:20px;
+    }
+
+    table,
+    thead,
+    tbody,
+    tfoot,
+    tr,
+    td{
+        display:block;
+        width:100%;
     }
 
     table{
+        background:transparent;
+        border-radius:0;
+        box-shadow:none;
+    }
+
+    thead{
+        display:none;
+    }
+
+    tbody tr,
+    tfoot tr{
+        margin-bottom:12px;
+        padding:14px;
+        background:#fff;
+        border:1px solid #eadbce;
+        border-radius:16px;
+        box-shadow:0 10px 24px rgba(92,58,33,.08);
+    }
+
+    td{
+        display:flex;
+        justify-content:space-between;
+        gap:14px;
+        padding:9px 0;
+        border:0;
+        text-align:right;
+        white-space:normal;
         font-size:14px;
     }
 
-    th,
-    td{
-        padding:12px;
+    tbody td::before,
+    tfoot td::before{
+        color:#8b6a52;
+        font-size:12px;
+        font-weight:800;
+        text-align:left;
+        text-transform:uppercase;
+        letter-spacing:.04em;
+    }
+
+    tbody td:nth-child(1)::before{ content:"Menu"; }
+    tbody td:nth-child(2)::before{ content:"Jumlah"; }
+    tbody td:nth-child(3)::before{ content:"Subtotal"; }
+    tfoot td:first-child{
+        display:none;
+    }
+
+    tfoot td:last-child{
+        color:#2e1f0b;
+        font-size:17px;
+        font-weight:800;
+    }
+
+    tfoot td:last-child::before{ content:"Total Bayar"; }
+
+    tbody td:first-child{
+        display:block;
+        color:#2e1f0b;
+        font-size:16px;
+        font-weight:800;
+        text-align:left;
+        padding-top:0;
+    }
+
+    tbody td:first-child::before{
+        display:none;
     }
 
     .button{
         width:100%;
         margin-right:0;
+    }
+
+    .rating-group{
+        justify-content:center;
     }
 
 }

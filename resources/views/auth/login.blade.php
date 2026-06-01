@@ -23,7 +23,7 @@
             Pelanggan hanya bisa masuk melalui QR code yang tersedia di meja.
             Setelah QR dipindai, nomor meja akan terbaca otomatis dan menu langsung terbuka.
         </p>
-        <a href="/admin/login" class="staff-link">Masuk Admin / Kasir</a>
+        <a href="/login-karyawan" class="staff-link">Masuk Admin / Kasir</a>
 
     </div>
 

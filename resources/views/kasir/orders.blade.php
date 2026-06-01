@@ -174,6 +174,11 @@
 }
 .orders-empty i { font-size: 40px; display: block; margin-bottom: 10px; opacity: .5; }
 .orders-pagination { margin-top: 24px; display: flex; flex-direction: column; align-items: center; }
+.orders-page.is-loading .orders-list,
+.orders-page.is-loading .orders-pagination {
+    opacity: .55;
+    pointer-events: none;
+}
 
 /* ── Modal Konfirmasi Hapus ── */
 .del-modal-wrap {
@@ -275,28 +280,28 @@
         <div class="stat-card">
             <div class="stat-icon si-brown"><i class="bi bi-receipt"></i></div>
             <div>
-                <div class="stat-value">{{ $totalOrders }}</div>
+                <div class="stat-value" data-stat="totalOrders">{{ $totalOrders }}</div>
                 <div class="stat-label">Total Order</div>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon si-green"><i class="bi bi-check-circle"></i></div>
             <div>
-                <div class="stat-value">{{ $completedCount }}</div>
+                <div class="stat-value" data-stat="completedCount">{{ $completedCount }}</div>
                 <div class="stat-label">Selesai</div>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon si-yellow"><i class="bi bi-clock-history"></i></div>
             <div>
-                <div class="stat-value">{{ $pendingCount }}</div>
+                <div class="stat-value" data-stat="pendingCount">{{ $pendingCount }}</div>
                 <div class="stat-label">Pending</div>
             </div>
         </div>
         <div class="stat-card">
             <div class="stat-icon si-blue"><i class="bi bi-cash-stack"></i></div>
             <div>
-                <div class="stat-value" style="font-size:14px;">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</div>
+                <div class="stat-value" data-stat="totalRevenue" style="font-size:14px;">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</div>
                 <div class="stat-label">Total Pendapatan</div>
             </div>
         </div>
@@ -323,11 +328,9 @@
         <button type="submit" class="btn-filter">
             <i class="bi bi-search"></i> Filter
         </button>
-        @if(request()->hasAny(['search','status','order_type','date']))
-        <a href="{{ route('kasir.orders') }}" class="btn-reset">
+        <a href="{{ route('kasir.orders') }}" class="btn-reset" style="{{ request()->hasAny(['search','status','order_type','date']) ? '' : 'display:none;' }}">
             <i class="bi bi-x-circle" style="margin-right:4px;"></i> Reset
         </a>
-        @endif
     </form>
 
     {{-- List --}}
@@ -350,11 +353,11 @@
             };
             $isBawaPulang = empty($order->table_number);
         @endphp
-        <div class="order-card" id="order-card-{{ $order->id }}">
+        <div class="order-card" id="order-card-{{ $order->id }}" data-order-id="{{ $order->id }}">
             <div>
                 <div class="order-card-top">
                     <span class="order-id">#{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}</span>
-                    <span class="status-badge {{ $sc }}">{{ $sl }}</span>
+                    <span class="status-badge {{ $sc }}" data-order-status>{{ $sl }}</span>
                     <span class="type-badge">{{ $isBawaPulang ? 'Bawa Pulang' : ($order->order_type ?? 'Makan di Sini') }}</span>
                 </div>
                 <div class="order-customer">{{ $order->customer_name }}</div>
@@ -389,7 +392,7 @@
                 <div class="order-controls">
                     @if($isBawaPulang)
                         @if(!in_array($order->status, ['completed', 'cancelled']))
-                        <a href="{{ route('kasir.payment.show', $order->id) }}" class="btn-bayar">
+                        <a href="{{ route('kasir.payment.show', $order->id) }}" class="btn-bayar" data-pay-button>
                             <i class="bi bi-cash-coin"></i> Bayar
                         </a>
                         @else
@@ -399,7 +402,7 @@
                         @endif
                     @else
                         @if(!in_array($order->status, ['completed', 'cancelled']))
-                        <a href="{{ route('kasir.payment.show', $order->id) }}" class="btn-bayar">
+                        <a href="{{ route('kasir.payment.show', $order->id) }}" class="btn-bayar" data-pay-button>
                             <i class="bi bi-cash-coin"></i> Bayar
                         </a>
                         @endif
@@ -486,6 +489,197 @@
 var CSRF     = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 var BASE_URL = '{{ url("kasir/orders") }}';
 var _delId   = null;
+var HAS_FILTER = {{ request()->hasAny(['search','status','order_type','date']) ? 'true' : 'false' }};
+var ordersPage = document.querySelector('.orders-page');
+var filterForm = document.querySelector('.orders-filters');
+
+function hasActiveFilter() {
+    if (!filterForm) return false;
+
+    return Array.from(filterForm.elements).some(function (el) {
+        return el.name && el.value && el.value.trim() !== '';
+    });
+}
+
+function setUrlFilterState(url) {
+    try {
+        var parsed = new URL(url, window.location.origin);
+        HAS_FILTER = ['search', 'status', 'order_type', 'date'].some(function (key) {
+            return parsed.searchParams.get(key);
+        });
+    } catch (e) {
+        HAS_FILTER = hasActiveFilter();
+    }
+
+    var resetLink = document.querySelector('.btn-reset');
+    if (resetLink) {
+        resetLink.style.display = HAS_FILTER ? 'inline-flex' : 'none';
+    }
+}
+
+function formatRupiah(value) {
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0
+    }).format(value || 0);
+}
+
+function statusClass(status) {
+    return {
+        pending: 'badge-pending',
+        confirmed: 'badge-confirmed',
+        completed: 'badge-completed',
+        cancelled: 'badge-cancelled'
+    }[status] || 'badge-pending';
+}
+
+function syncOrderCard(order) {
+    var card = document.getElementById('order-card-' + order.id);
+    if (!card) return;
+
+    var badge = card.querySelector('[data-order-status]');
+    if (badge) {
+        badge.textContent = order.status_label;
+        badge.className = 'status-badge ' + statusClass(order.status);
+    }
+
+    var select = document.getElementById('rs-' + order.id);
+    if (select && select.value !== order.status) {
+        select.value = order.status;
+    }
+
+    var payButton = card.querySelector('[data-pay-button]');
+    if (payButton) {
+        payButton.style.display = ['completed', 'cancelled'].includes(order.status) ? 'none' : 'inline-flex';
+    }
+}
+
+function refreshOrdersAjax() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', BASE_URL + '/status', true);
+    xhr.setRequestHeader('Accept', 'application/json');
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+    xhr.onload = function () {
+        if (xhr.status < 200 || xhr.status >= 300) return;
+
+        try {
+            var data = JSON.parse(xhr.responseText);
+            if (!data.success) return;
+
+            var stats = data.stats || {};
+            var totalOrdersEl = document.querySelector('[data-stat="totalOrders"]');
+            var completedEl = document.querySelector('[data-stat="completedCount"]');
+            var pendingEl = document.querySelector('[data-stat="pendingCount"]');
+            var revenueEl = document.querySelector('[data-stat="totalRevenue"]');
+
+            if (totalOrdersEl) totalOrdersEl.textContent = stats.totalOrders ?? 0;
+            if (completedEl) completedEl.textContent = stats.completedCount ?? 0;
+            if (pendingEl) pendingEl.textContent = stats.pendingCount ?? 0;
+            if (revenueEl) revenueEl.textContent = formatRupiah(stats.totalRevenue ?? 0);
+
+            (data.orders || []).forEach(syncOrderCard);
+        } catch (e) {}
+    };
+
+    xhr.send();
+}
+
+function replaceOrdersFromHtml(html) {
+    var doc = new DOMParser().parseFromString(html, 'text/html');
+    var nextList = doc.getElementById('ordersList');
+    var currentList = document.getElementById('ordersList');
+    var nextPagination = doc.querySelector('.orders-pagination');
+    var currentPagination = document.querySelector('.orders-pagination');
+
+    if (nextList && currentList) {
+        currentList.innerHTML = nextList.innerHTML;
+    }
+
+    if (nextPagination && currentPagination) {
+        currentPagination.innerHTML = nextPagination.innerHTML;
+    } else if (nextPagination && currentList) {
+        currentList.insertAdjacentElement('afterend', nextPagination);
+    } else if (!nextPagination && currentPagination) {
+        currentPagination.remove();
+    }
+
+    refreshOrdersAjax();
+}
+
+function loadOrdersPage(url, pushState, quiet) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+    if (!quiet && ordersPage) {
+        ordersPage.classList.add('is-loading');
+    }
+
+    xhr.onload = function () {
+        if (ordersPage) ordersPage.classList.remove('is-loading');
+
+        if (xhr.status < 200 || xhr.status >= 300) {
+            showToast('Gagal memuat riwayat order.', 'error');
+            return;
+        }
+
+        replaceOrdersFromHtml(xhr.responseText);
+        setUrlFilterState(url);
+
+        if (pushState) {
+            window.history.pushState({}, '', url);
+        }
+    };
+
+    xhr.onerror = function () {
+        if (ordersPage) ordersPage.classList.remove('is-loading');
+        showToast('Koneksi gagal, coba lagi.', 'error');
+    };
+
+    xhr.send();
+}
+
+if (filterForm) {
+    filterForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        var params = new URLSearchParams(new FormData(filterForm));
+        Array.from(params.keys()).forEach(function (key) {
+            if (!params.get(key)) params.delete(key);
+        });
+
+        var query = params.toString();
+        loadOrdersPage(filterForm.action + (query ? '?' + query : ''), true, false);
+    });
+
+    filterForm.addEventListener('change', function (e) {
+        if (e.target.matches('select, input[type="date"]')) {
+            filterForm.dispatchEvent(new Event('submit', { cancelable: true }));
+        }
+    });
+}
+
+document.addEventListener('click', function (e) {
+    var pageLink = e.target.closest('.orders-pagination a');
+    if (pageLink) {
+        e.preventDefault();
+        loadOrdersPage(pageLink.href, true, false);
+        return;
+    }
+
+    var resetLink = e.target.closest('.btn-reset');
+    if (resetLink) {
+        e.preventDefault();
+        if (filterForm) filterForm.reset();
+        loadOrdersPage(resetLink.href, true, false);
+    }
+});
+
+window.addEventListener('popstate', function () {
+    loadOrdersPage(window.location.href, false, false);
+});
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
 function showToast(msg, type) {
@@ -543,8 +737,9 @@ document.getElementById('delBtnOk').addEventListener('click', function () {
                         card.remove();
                         var list = document.getElementById('ordersList');
                         if (list && list.querySelectorAll('.order-card').length === 0) {
-                            list.innerHTML = '<div class="orders-empty"><i class="bi bi-inbox"></i>Tidak ada order ditemukan.</div>';
+                            loadOrdersPage(window.location.href, false, true);
                         }
+                        refreshOrdersAjax();
                     }, 300);
                 }
                 closeDelModal();
@@ -582,8 +777,13 @@ function updateStatus(id) {
         try {
             var data = JSON.parse(xhr.responseText);
             if (data.success) {
+                syncOrderCard({
+                    id: id,
+                    status: data.status,
+                    status_label: data.status_label
+                });
+                refreshOrdersAjax();
                 showToast('Status berhasil diupdate!', 'success');
-                setTimeout(function () { location.reload(); }, 800);
             } else {
                 showToast(data.message || 'Gagal update status.', 'error');
             }
@@ -597,6 +797,11 @@ function updateStatus(id) {
     };
 
     xhr.send(JSON.stringify({ status: selectEl.value }));
+}
+
+refreshOrdersAjax();
+if (!HAS_FILTER) {
+    setInterval(refreshOrdersAjax, 5000);
 }
 </script>
 @endpush

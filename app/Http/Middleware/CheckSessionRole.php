@@ -16,7 +16,7 @@ class CheckSessionRole
     public function handle(Request $request, Closure $next, string $role): Response
     {
         if (session('role') !== $role) {
-            return redirect('/admin/login')->with('error', 'Silakan login terlebih dahulu sebagai ' . ucfirst($role) . '.');
+            return redirect('/login-karyawan')->with('error', 'Silakan login terlebih dahulu sebagai ' . ucfirst($role) . '.');
         }
 
         return $next($request);

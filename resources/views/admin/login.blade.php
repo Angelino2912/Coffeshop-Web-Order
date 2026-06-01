@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>Admin Login</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ asset('style/images/logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('style/images/logo.png') }}">
 
     <link rel="stylesheet" href="{{ asset('style/admin/login.css') }}">
 </head>

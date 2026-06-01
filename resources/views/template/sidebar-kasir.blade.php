@@ -13,7 +13,7 @@
     </ul>
 
     <div style="position:absolute; bottom:24px; width:100%; left:0; padding:0 16px; box-sizing:border-box;">
-        <a href="{{ url('/admin/login') }}"
+        <a href="{{ url('/login-karyawan') }}"
            onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
            style="display:flex; align-items:center; gap:8px; color:#9b7a62; font-size:13px; text-decoration:none; padding:10px 12px; border-radius:10px;"
            onmouseover="this.style.background='#f3dfcf'" onmouseout="this.style.background='transparent'">

@@ -10,6 +10,7 @@ body {
     url('https://images.unsplash.com/photo-1509042239860-f550ce710b93');
     background-size: cover;
     background-position: center;
+    min-height: 100vh;
 }
 
 .checkout-container {
@@ -69,4 +70,133 @@ body {
 .checkout-box button:hover {
     transform: translateY(-1px);
     box-shadow: 0 10px 22px rgba(0,0,0,0.12);
+}
+
+@media (max-width: 640px) {
+    .checkout-container {
+        width: 100%;
+        margin: 0 auto;
+        padding: 14px 10px 24px;
+    }
+
+    .checkout-box {
+        gap: 20px;
+        padding: 18px;
+        border-radius: 18px;
+    }
+
+    .checkout-header {
+        gap: 10px !important;
+    }
+
+    .checkout-header h1 {
+        font-size: 26px !important;
+        line-height: 1.2;
+    }
+
+    .checkout-header p {
+        font-size: 14px !important;
+        line-height: 1.6 !important;
+    }
+
+    .checkout-content {
+        gap: 18px !important;
+    }
+
+    .checkout-content h2 {
+        font-size: 20px !important;
+        margin-bottom: 0 !important;
+    }
+
+    .checkout-table,
+    .checkout-table thead,
+    .checkout-table tbody,
+    .checkout-table tfoot,
+    .checkout-table tr,
+    .checkout-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .checkout-table {
+        background: transparent;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .checkout-table thead {
+        display: none;
+    }
+
+    .checkout-table tbody tr,
+    .checkout-table tfoot tr {
+        margin-bottom: 12px;
+        padding: 14px;
+        background: #fff;
+        border: 1px solid #eadbce !important;
+        border-radius: 16px;
+        box-shadow: 0 10px 24px rgba(92, 58, 33, 0.08);
+    }
+
+    .checkout-table td {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 9px 0;
+        border: 0;
+        text-align: right;
+        white-space: normal;
+    }
+
+    .checkout-table tbody td::before,
+    .checkout-table tfoot td::before {
+        color: #8b6a52;
+        font-size: 12px;
+        font-weight: 800;
+        text-align: left;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    .checkout-table tbody td:nth-child(1)::before { content: "Menu"; }
+    .checkout-table tbody td:nth-child(2)::before { content: "Jumlah"; }
+    .checkout-table tbody td:nth-child(3)::before { content: "Subtotal"; }
+    .checkout-table tfoot td:first-child {
+        display: none;
+    }
+
+    .checkout-table tfoot td:last-child {
+        font-size: 17px;
+        font-weight: 800;
+        color: #2e1f0b;
+    }
+
+    .checkout-table tfoot td:last-child::before { content: "Total Bayar"; }
+
+    .checkout-table tbody td:first-child {
+        display: block;
+        font-size: 16px;
+        font-weight: 800;
+        color: #2e1f0b;
+        text-align: left;
+        padding-top: 0;
+    }
+
+    .checkout-table tbody td:first-child::before {
+        display: none;
+    }
+
+    .checkout-summary {
+        padding: 16px !important;
+        border-radius: 16px !important;
+    }
+
+    .checkout-note textarea {
+        min-height: 100px;
+        border-radius: 14px;
+    }
+
+    .checkout-box button {
+        width: 100%;
+    }
 }

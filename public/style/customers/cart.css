@@ -10,6 +10,8 @@ body {
     url('https://images.unsplash.com/photo-1509042239860-f550ce710b93');
     background-size: cover;
     background-position: center;
+    min-height: 100vh;
+    padding: 1px 14px;
 }
 
 .box {
@@ -85,4 +87,128 @@ p {
     color: #5c3a21;
     font-size: 16px;
     line-height: 1.7;
+}
+
+@media (max-width: 640px) {
+    body {
+        padding: 1px 10px 24px;
+    }
+
+    .box {
+        width: 100%;
+        margin: 14px auto;
+        padding: 18px;
+        border-radius: 18px;
+    }
+
+    .box h1 {
+        font-size: 26px !important;
+        margin: 14px 0 18px !important;
+        line-height: 1.2;
+    }
+
+    .alert {
+        margin-bottom: 12px;
+        border-radius: 12px;
+        padding: 12px !important;
+        font-size: 13px;
+    }
+
+    table,
+    thead,
+    tbody,
+    tfoot,
+    tr,
+    td {
+        display: block;
+        width: 100%;
+    }
+
+    table {
+        background: transparent;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    thead {
+        display: none;
+    }
+
+    tbody tr,
+    tfoot tr {
+        margin-bottom: 12px;
+        padding: 14px;
+        background: #fff;
+        border: 1px solid #eadbce !important;
+        border-radius: 16px;
+        box-shadow: 0 10px 24px rgba(92, 58, 33, 0.08);
+    }
+
+    td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 9px 0;
+        border: 0;
+        font-size: 14px;
+        text-align: right;
+        white-space: normal;
+    }
+
+    tbody td::before,
+    tfoot td::before {
+        color: #8b6a52;
+        font-size: 12px;
+        font-weight: 700;
+        text-align: left;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    tbody td:nth-child(1)::before { content: "Menu"; }
+    tbody td:nth-child(2)::before { content: "Harga"; }
+    tbody td:nth-child(3)::before { content: "Jumlah"; }
+    tbody td:nth-child(4)::before { content: "Subtotal"; }
+    tbody td:nth-child(5)::before { content: "Aksi"; }
+    tfoot td:first-child {
+        display: none;
+    }
+
+    tfoot td:last-child {
+        font-size: 17px;
+        font-weight: 800;
+        color: #2e1f0b;
+    }
+
+    tfoot td:last-child::before { content: "Total"; }
+
+    tbody td:first-child {
+        display: block;
+        font-size: 16px;
+        font-weight: 800;
+        color: #2e1f0b;
+        text-align: left;
+        padding-top: 0;
+    }
+
+    tbody td:first-child::before {
+        display: none;
+    }
+
+    input[type="number"] {
+        width: 72px !important;
+        padding: 8px 10px;
+        border: 1px solid #d8c6b3;
+        border-radius: 10px;
+        text-align: center;
+    }
+
+    .button,
+    .actions {
+        width: 100%;
+        min-width: 0;
+        justify-content: center;
+        text-align: center;
+    }
 }

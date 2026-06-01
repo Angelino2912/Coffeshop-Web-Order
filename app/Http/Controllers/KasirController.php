@@ -118,7 +118,7 @@ class KasirController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|in:pending,confirmed,completed',
+            'status' => 'required|in:pending,confirmed,completed,cancelled',
         ]);
 
         $order         = Order::findOrFail($id);
@@ -133,6 +133,7 @@ class KasirController extends Controller
                     'pending'   => 'Pending',
                     'confirmed' => 'Diproses',
                     'completed' => 'Selesai',
+                    'cancelled' => 'Dibatalkan',
                     default     => ucfirst($order->status),
                 },
             ]);
@@ -264,6 +265,37 @@ class KasirController extends Controller
             'orders', 'pendingCount', 'completedCount',
             'totalOrders', 'totalRevenue', 'menuCount'
         ));
+    }
+
+    public function ordersStatus()
+    {
+        $orders = Order::latest('id')
+            ->limit(50)
+            ->get()
+            ->map(fn($order) => [
+                'id'              => $order->id,
+                'status'          => $order->status,
+                'status_label'    => match ($order->status) {
+                    'pending'   => 'Pending',
+                    'confirmed' => 'Diproses',
+                    'completed' => 'Selesai',
+                    'cancelled' => 'Dibatalkan',
+                    default     => ucfirst($order->status),
+                },
+                'cash_received'   => $order->cash_received,
+                'change_amount'   => $order->change_amount,
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'stats'   => [
+                'totalOrders'    => Order::whereDate('created_at', today())->count(),
+                'completedCount' => Order::where('status', 'completed')->count(),
+                'pendingCount'   => Order::where('status', 'pending')->count(),
+                'totalRevenue'   => Order::where('status', 'completed')->sum('total'),
+            ],
+            'orders'  => $orders,
+        ]);
     }
     // ─── Halaman Pembayaran ───────────────────────────────────────────────────
     public function pembayaran($id)

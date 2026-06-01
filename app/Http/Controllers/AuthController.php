@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Admin;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -27,7 +28,11 @@ class AuthController extends Controller
             : Admin::where('name', $login)->first();
 
         if ($admin && Hash::check($request->password, $admin->password)) {
-            if ($admin->role === 'kasir') {
+            $role = Str::lower(trim($admin->role ?? 'admin'));
+
+            session()->forget(['admin_id', 'kasir_id', 'role', 'name']);
+
+            if ($role === 'kasir') {
                 session([
                     'kasir_id' => $admin->id,
                     'role'     => 'kasir',
@@ -37,13 +42,17 @@ class AuthController extends Controller
                 return redirect('/kasir/dashboard');
             }
 
-            session([
-                'admin_id' => $admin->id,
-                'role'     => 'admin',
-                'name'     => $admin->name,
-            ]);
+            if ($role === 'admin') {
+                session([
+                    'admin_id' => $admin->id,
+                    'role'     => 'admin',
+                    'name'     => $admin->name,
+                ]);
 
-            return redirect('/admin/dashboard');
+                return redirect('/admin/dashboard');
+            }
+
+            return back()->withErrors(['email' => 'Role akun tidak dikenali'])->withInput();
         }
 
         return back()->withErrors(['email' => 'Email/nama atau password salah'])->withInput();

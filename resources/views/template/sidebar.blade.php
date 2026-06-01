@@ -28,7 +28,7 @@
     </ul>
 
     <div class="logout-area">
-        <a href="/admin/login"
+        <a href="/login-karyawan"
            onclick="event.preventDefault(); document.getElementById('admin-logout-form').submit();">
             <i class="bi bi-box-arrow-left"></i> Logout
         </a>

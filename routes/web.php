@@ -28,6 +28,8 @@ Route::get('/login-karyawan', function () {
 })->name('login.karyawan');
 
 Route::post('/login-karyawan', [AuthController::class, 'adminLogin']);
+Route::get('/admin/login', fn () => redirect('/login-karyawan'));
+Route::post('/admin/login', [AuthController::class, 'adminLogin']);
 
 // ─── CUSTOMER PAGES ───────────────────────────────────────────────────────────
 Route::get('/dashboard', function () {
@@ -55,30 +57,32 @@ Route::get('/table/{qr}', [TableController::class, 'scan']);
 // ─── ADMIN ────────────────────────────────────────────────────────────────────
 Route::get('/admin', function () {
     if (session('role') !== 'admin') {
-        return redirect('/admin/login');
+        return redirect('/login-karyawan');
     }
     return redirect('/admin/dashboard');
 });
-Route::get('/admin/dashboard', [AdminController::class, 'dashboard']);
-Route::get('/admin/orders', [AdminController::class, 'orders']);
-Route::put('/admin/orders/{id}/status', [AdminController::class, 'updateStatus']);
-Route::post('/admin/meja/generate-qr', [AdminController::class, 'generateQr']);
-Route::post('/admin/meja/store', [AdminController::class, 'storeMeja']);
-Route::get('/admin/meja/status', [AdminController::class, 'mejaStatus']);
-Route::get('/admin/manajemen-menu', [AdminController::class, 'manajemenMenu']);
-Route::post('/admin/manajemen-menu', [AdminController::class, 'storeMenu']);
-Route::put('/admin/manajemen-menu/{id}', [AdminController::class, 'updateMenu']);
-Route::delete('/admin/manajemen-menu/{id}', [AdminController::class, 'destroyMenu']);
-Route::get('/admin/reviews', [AdminController::class, 'reviews']);
-Route::get('/admin/analytics', [AdminController::class, 'analytics'])->name('admin.analytics');
-Route::post('/admin/meja/{no_meja}/delete', [TableController::class, 'destroy']);
-Route::post('/admin/logout', function () {
-    session()->forget(['admin_id', 'role', 'name']);
-    return redirect('/login-karyawan');
-})->name('admin.logout');
+Route::middleware('role:admin')->group(function () {
+    Route::get('/admin/dashboard', [AdminController::class, 'dashboard']);
+    Route::get('/admin/orders', [AdminController::class, 'orders']);
+    Route::put('/admin/orders/{id}/status', [AdminController::class, 'updateStatus']);
+    Route::post('/admin/meja/generate-qr', [AdminController::class, 'generateQr']);
+    Route::post('/admin/meja/store', [AdminController::class, 'storeMeja']);
+    Route::get('/admin/meja/status', [AdminController::class, 'mejaStatus']);
+    Route::get('/admin/manajemen-menu', [AdminController::class, 'manajemenMenu']);
+    Route::post('/admin/manajemen-menu', [AdminController::class, 'storeMenu']);
+    Route::put('/admin/manajemen-menu/{id}', [AdminController::class, 'updateMenu']);
+    Route::delete('/admin/manajemen-menu/{id}', [AdminController::class, 'destroyMenu']);
+    Route::get('/admin/reviews', [AdminController::class, 'reviews']);
+    Route::get('/admin/analytics', [AdminController::class, 'analytics'])->name('admin.analytics');
+    Route::post('/admin/meja/{no_meja}/delete', [TableController::class, 'destroy']);
+    Route::post('/admin/logout', function () {
+        session()->forget(['admin_id', 'role', 'name']);
+        return redirect('/login-karyawan');
+    })->name('admin.logout');
+});
 
 // ─── KASIR ────────────────────────────────────────────────────────────────────
-Route::prefix('kasir')->name('kasir.')->group(function () {
+Route::prefix('kasir')->name('kasir.')->middleware('role:kasir')->group(function () {
     // Dashboard
     Route::get('/dashboard', [KasirController::class, 'dashboard'])->name('dashboard');
 
@@ -90,6 +94,7 @@ Route::prefix('kasir')->name('kasir.')->group(function () {
 
     // Orders
     Route::get('/orders', [KasirController::class, 'ordersIndex'])->name('orders');
+    Route::get('/orders/status', [KasirController::class, 'ordersStatus'])->name('orders.status-list');
     Route::post('/orders', [KasirController::class, 'storeOrder'])->name('orders.store');
     Route::post('/orders/{id}/status', [KasirController::class, 'updateStatus'])->name('orders.status');
     Route::delete('/orders/{id}', [KasirController::class, 'destroy'])->name('orders.destroy');
@@ -114,7 +119,7 @@ Route::get('/admin/fix-qr', function () {
         }
     });
     return 'Done: semua meja sudah punya UUID';
-});
+})->middleware('role:admin');
 
 Route::get('/admin/force-generate-qr', function () {
     $mejas = \App\Models\Meja::all();
@@ -124,4 +129,4 @@ Route::get('/admin/force-generate-qr', function () {
         \Illuminate\Support\Facades\Storage::disk('public')->put('qr/meja_' . $meja->no_meja . '.svg', $qrImage);
     }
     return 'QR semua meja berhasil digenerate';
-});
+})->middleware('role:admin');

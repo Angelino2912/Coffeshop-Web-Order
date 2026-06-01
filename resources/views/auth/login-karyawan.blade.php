@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>Login Karyawan</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ asset('style/images/logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('style/images/logo.png') }}">
     <link rel="stylesheet" href="{{ asset('style/admin/login.css') }}">
 </head>
 <body>
@@ -21,10 +23,10 @@
             @csrf
 
             <div class="input-group">
-                <label>Nama</label>
-                <input type="text" name="name"
-                       placeholder="Masukkan nama"
-                       value="{{ old('name') }}" required>
+                <label>Email / Nama</label>
+                <input type="text" name="email"
+                       placeholder="Masukkan email atau nama"
+                       value="{{ old('email') }}" required>
             </div>
 
             <div class="input-group">
